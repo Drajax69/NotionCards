@@ -1,6 +1,7 @@
 # Notion Card Flutter App
 
 This Flutter app allows users to create flashcard decks from Notion databases and study them.
+Link: https://notioncards-23b9e.web.app 
 
 ## Features
 

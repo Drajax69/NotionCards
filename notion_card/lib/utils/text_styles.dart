@@ -9,8 +9,16 @@ class TextStyles {
     letterSpacing: 1.2,
   );
 
+    static const TextStyle headerBlack = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: Colors.black87,
+    fontFamily: 'Poppins',
+    letterSpacing: 1.2,
+  );
+
   static const TextStyle headerWhite = TextStyle(
-    fontSize: 36,
+    fontSize: 45,
     fontWeight: FontWeight.bold,
     color: Colors.white,
     fontFamily: 'Poppins',

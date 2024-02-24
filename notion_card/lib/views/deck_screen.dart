@@ -9,6 +9,7 @@ import 'package:notion_card/repoModels/card.dart' as repo;
 import 'package:notion_card/repoModels/deck.dart';
 import 'package:notion_card/repoModels/user.dart' as model;
 import 'package:notion_card/utils/id_generator.dart';
+import 'package:notion_card/utils/text_styles.dart';
 import 'package:notion_card/views/card_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
 
@@ -23,6 +24,7 @@ class DecksScreen extends StatefulWidget {
 class _DecksScreenState extends State<DecksScreen> {
   List<Deck> decks = [];
   bool _isLoading = true;
+  final String defaultVersion = "2022-06-28";
 
   @override
   void initState() {
@@ -43,14 +45,22 @@ class _DecksScreenState extends State<DecksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flashcards Decks'),
+        toolbarHeight: 120,
+        title: const Text('Flashcards Decks', style: TextStyles.headerBlack),
         actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () {
+              __showInfoDialog();
+            },
+          ),
+          const SizedBox(
+            width: 10,
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
               _logout();
-              // Add your logout logic here
-              // For example, you can navigate to the login screen
             },
           ),
         ],
@@ -113,7 +123,7 @@ class _DecksScreenState extends State<DecksScreen> {
 
   Future<void> _showAddDeckDialog(BuildContext context) async {
     String secret = '';
-    String version = '';
+    String version = defaultVersion; // default
     String dbID = '';
     String keyHeader = '';
     String valueHeader = '';
@@ -141,13 +151,14 @@ class _DecksScreenState extends State<DecksScreen> {
                   },
                 ),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'Version'),
+                  decoration: InputDecoration(
+                      labelText: 'Version', hintText: defaultVersion),
                   onChanged: (value) {
                     version = value;
                   },
                 ),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'DB ID'),
+                  decoration: const InputDecoration(labelText: 'Database ID'),
                   onChanged: (value) {
                     dbID = value;
                   },
@@ -185,6 +196,19 @@ class _DecksScreenState extends State<DecksScreen> {
           ],
         );
       },
+    );
+  }
+
+  __showInfoDialog() {
+    DialogManager.show(
+      context,
+      'Info',
+      ' - This is a flashcard app that uses Notion as a database. \n'
+          ' - You can add a deck by providing the name, secret, version, database ID, key header, and value header.  \n'
+          ' - You need a notion integration to be able to fetch data from notion.\n'
+          ' - Deleting a deck here will not delete the notion database.  \n'
+          ' - Click update deck whenever you update the notion database.  \n'
+          ' - Contact dev at amriteshdasgupta@gmail.com.  \n',
     );
   }
 

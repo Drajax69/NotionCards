@@ -2,8 +2,8 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:notion_card/description_panel.dart';
 import 'package:notion_card/login.dart';
-import 'package:notion_card/utils/text_styles.dart';
 import 'package:notion_card/views/deck_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,8 +22,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _passwordController = TextEditingController();
   late model.User user;
   bool _isLoading = false;
-  final double _showLeftThreshold = 750;
-  final double _showSignUpThreshold = 300;
+  final double _showLeftWidthThreshold = 750;
+  final double _showLeftHeightThreshold = 550;
+  final double _showLoginWidthThreshold = 300;
 
   Future<void> _registerWithEmailAndPassword() async {
     setState(() {
@@ -42,8 +43,8 @@ class _RegisterPageState extends State<RegisterPage> {
         model.User.createUser(user);
         setState(() {
           this.user = user;
+          _goDecks();
         });
-        _goDecks();
       }
     } catch (e) {
       log(e.toString());
@@ -81,12 +82,16 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (screenWidth > _showLeftThreshold) _leftDescription(),
+          if (screenWidth > _showLeftWidthThreshold &&
+              screenHeight > _showLeftHeightThreshold)
+            const DescriptionPanel(),
           Expanded(
             flex: 2,
             child: Padding(
@@ -204,7 +209,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       const SizedBox(height: 15),
                       Row(
                         children: [
-                          if (screenWidth > _showSignUpThreshold)
+                          if (screenWidth > _showLoginWidthThreshold)
                             const Text(
                               'Already have an account?',
                               style: TextStyle(
@@ -237,41 +242,6 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _leftDescription() {
-    return Expanded(
-      flex: 3,
-      child: Container(
-        color: const Color.fromARGB(255, 176, 150, 246),
-        padding: const EdgeInsets.only(top: 20.0, left: 25.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.asset(
-              'logosvg.png',
-              width: 200, // Adjust width as needed
-              height: 200, // Adjust height as needed
-              fit: BoxFit.cover,
-            ),
-            const Text(
-              'NotionCards',
-              style: TextStyles.headerWhite,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Master Your Learning with NotionCards - The Ultimate Flashcard Tool!',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

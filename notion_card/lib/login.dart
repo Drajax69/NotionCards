@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:notion_card/description_panel.dart';
 import 'package:notion_card/register.dart';
-import 'package:notion_card/utils/text_styles.dart';
 import 'package:notion_card/views/deck_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,8 +19,29 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   late model.User user;
   bool _isLoading = false;
-  final double _showLeftThreshold = 750;
-  final double _showSignUpThreshold = 300;
+  final double _showLeftWidthThreshold = 750;
+  final double _showLeftHeightThreshold = 550;
+  final double _showSignUpWidthThreshold = 300;
+  final String imageURL = "https://picsum.photos/200/300";
+  late Image image = Image.network(
+    imageURL, // Replace with your image URL
+  );
+  bool isLoading = true;
+  @override
+  void initState() {
+    _loadImage();
+    super.initState();
+  }
+
+  _loadImage() async {
+    Image imageLoad = Image.network(
+      imageURL, // Replace with your image URL
+    );
+    setState(() {
+      image = imageLoad;
+      isLoading = false;
+    });
+  }
 
   Future<void> _signInWithEmailAndPassword() async {
     setState(() {
@@ -88,13 +109,20 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (screenWidth > _showLeftThreshold) _leftDescription(),
+          if (screenWidth > _showLeftWidthThreshold &&
+              screenHeight > _showLeftHeightThreshold)
+            const DescriptionPanel(),
           Expanded(
             flex: 2,
             child: Padding(
@@ -212,7 +240,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 15),
                       Row(
                         children: [
-                          if (screenWidth > _showSignUpThreshold)
+                          if (screenWidth > _showSignUpWidthThreshold)
                             const Text(
                               'Don’t have an account?',
                               style: TextStyle(
@@ -249,38 +277,5 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _leftDescription() {
-    return Expanded(
-      flex: 3,
-      child: Container(
-        color: const Color.fromARGB(255, 176, 150, 246),
-        padding: const EdgeInsets.only(top: 20.0, left: 25.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.asset(
-              'logosvg.png',
-              width: 200, // Adjust width as needed
-              height: 200, // Adjust height as needed
-              fit: BoxFit.cover,
-            ),
-            const Text(
-              'NotionCards',
-              style: TextStyles.headerWhite,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Master Your Learning with NotionCards - The Ultimate Flashcard Tool!',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+ 
 }
