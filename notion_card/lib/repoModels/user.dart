@@ -13,11 +13,16 @@ class User {
 
   static Future<User?> getUser(String uid) async {
     try {
+
       final snapshot =
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
       if (snapshot.exists) {
+                log("[getUser] User found for uid: $uid");
+
         return User.fromDocumentSnapshot(snapshot);
+        
       } else {
+        log("[getUser] User not found for uid: $uid");
         return null;
       }
     } catch (e) {
@@ -62,7 +67,7 @@ class User {
     }
   }
 
-   Future<void> deleteDeckRepo(Deck deck) async {
+  Future<void> deleteDeckRepo(Deck deck) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -74,7 +79,6 @@ class User {
       log('Error deleting deck: $e');
     }
   }
-
 
   Future<void> updateDeckRepo(Deck deck) async {
     try {
@@ -89,7 +93,6 @@ class User {
     }
   }
 
-
   Future<List<Deck>> getDecks() async {
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -103,8 +106,6 @@ class User {
       return [];
     }
   }
-
-
 
   static User fromDocumentSnapshot(DocumentSnapshot snapshot) {
     final data = snapshot.data() as Map<String, dynamic>;

@@ -6,14 +6,33 @@ class DialogManager {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(title),
-          content: Text(message),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: const Color(0xFF755DC1),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            message,
+            style: TextStyle(
+              color: const Color(0xFF393939),
+              fontSize: 16,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('OK'),
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                  color: const Color(0xFF755DC1),
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
         );
@@ -27,20 +46,45 @@ class DialogManager {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(title),
-          content: Text(message),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: const Color(0xFF755DC1),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            message,
+            style: TextStyle(
+              color: const Color(0xFF393939),
+              fontSize: 16,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(true);
               },
-              child: const Text('Yes'),
+              child: const Text(
+                'Yes',
+                style: TextStyle(
+                  color: const Color(0xFF755DC1),
+                  fontSize: 16,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(false);
               },
-              child: const Text('No'),
+              child: const Text(
+                'No',
+                style: TextStyle(
+                  color: const Color(0xFF755DC1),
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
         );

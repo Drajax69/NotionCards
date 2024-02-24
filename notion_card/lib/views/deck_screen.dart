@@ -1,18 +1,20 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:notion_card/httpService/notion_service.dart';
+import 'package:notion_card/login.dart';
 import 'package:notion_card/repoModels/card.dart' as repo;
 import 'package:notion_card/repoModels/deck.dart';
-import 'package:notion_card/repoModels/user.dart';
+import 'package:notion_card/repoModels/user.dart' as model;
 import 'package:notion_card/utils/id_generator.dart';
 import 'package:notion_card/views/card_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
 
 class DecksScreen extends StatefulWidget {
   const DecksScreen({Key? key, required this.user}) : super(key: key);
-  final User user;
+  final model.User user;
 
   @override
   State<DecksScreen> createState() => _DecksScreenState();
@@ -30,9 +32,11 @@ class _DecksScreenState extends State<DecksScreen> {
 
   _fetchDecks() async {
     decks = await widget.user.getDecks();
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -40,6 +44,16 @@ class _DecksScreenState extends State<DecksScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flashcards Decks'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              _logout();
+              // Add your logout logic here
+              // For example, you can navigate to the login screen
+            },
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -50,6 +64,14 @@ class _DecksScreenState extends State<DecksScreen> {
         },
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  _logout() {
+    FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
@@ -75,7 +97,7 @@ class _DecksScreenState extends State<DecksScreen> {
                 style:
                     const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              subtitle: Text('Tap to view cards'),
+              subtitle: const Text('Tap to view cards'),
               trailing: IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () {
@@ -185,17 +207,20 @@ class _DecksScreenState extends State<DecksScreen> {
     );
     widget.user.createDeckRepo(deck);
     deck.createCards(cards);
-
-    setState(() {
-      decks.add(deck);
-    });
+    if (mounted) {
+      setState(() {
+        decks.add(deck);
+      });
+    }
   }
 
   _deleteDeck(Deck deck) {
     widget.user.deleteDeckRepo(deck);
-    setState(() {
-      decks.removeWhere((d) => d.did == deck.did);
-    });
+    if (mounted) {
+      setState(() {
+        decks.removeWhere((d) => d.did == deck.did);
+      });
+    }
   }
 
   Future<void> _fetchNotionData(String name, String secret, String version,
