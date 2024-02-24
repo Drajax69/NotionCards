@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:notion_card/httpService/cors_gateway_service.dart';
 import 'package:notion_card/httpService/notion_service.dart';
 import 'package:notion_card/login.dart';
 import 'package:notion_card/repoModels/card.dart' as repo;
@@ -90,33 +90,49 @@ class _DecksScreenState extends State<DecksScreen> {
       itemCount: decks.length,
       itemBuilder: (context, index) {
         return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CardView(deck: decks[index]),
-              ),
-            );
-          },
-          child: Card(
-            elevation: 3,
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: ListTile(
-              title: Text(
-                decks[index].name,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              subtitle: const Text('Tap to view cards'),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () {
-                  _confirmDeleteDeck(decks[index]);
-                },
-              ),
-            ),
-          ),
-        );
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CardView(deck: decks[index]),
+                ),
+              );
+            },
+            child: Card(
+                elevation: 3,
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: ListTile(
+                  title: Text(
+                    decks[index].name,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text('Tap to view cards'),
+                  trailing: PopupMenuButton(
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: const Icon(Icons.update),
+                          title: const Text('Update'),
+                          onTap: () {
+                            Navigator.pop(context); // Close the menu
+                            _updateDeck(decks[index]);
+                          },
+                        ),
+                      ),
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: const Icon(Icons.delete),
+                          title: const Text('Delete'),
+                          onTap: () {
+                            Navigator.pop(context); // Close the menu
+                            _confirmDeleteDeck(decks[index]);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                )));
       },
     );
   }
@@ -238,6 +254,19 @@ class _DecksScreenState extends State<DecksScreen> {
     }
   }
 
+  _updateDeck(Deck deck) async {
+    // await _deleteDeck(deck);
+
+    // bool fetchSuccess = await _fetchNotionData(deck.name, deck.secretToken,
+    //     defaultVersion, deck.dbId, deck.keyHeader, deck.valueHeader);
+
+    if (mounted) {
+      setState(() {
+        decks.add(deck);
+      });
+    }
+  }
+
   _deleteDeck(Deck deck) {
     widget.user.deleteDeckRepo(deck);
     if (mounted) {
@@ -247,34 +276,43 @@ class _DecksScreenState extends State<DecksScreen> {
     }
   }
 
-  Future<void> _fetchNotionData(String name, String secret, String version,
+  Future<bool> _fetchNotionData(String name, String secret, String version,
       String dbID, String keyHeader, String valueHeader) async {
-    final Map<String, String> headers = {
-      'Authorization': 'Bearer $secret',
-      'Notion-Version': version,
-      'Content-Type': 'application/json',
-      "Access-Control-Allow-Origin": "*",
-      'Accept': '*/*',
-      "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, HEAD",
-    };
+    try {
+      final Map<String, String> headers = {
+        'Authorization': 'Bearer $secret',
+        'Notion-Version': version,
+        'Content-Type': 'application/json',
+        'X-REQUESTED-WITH': '*'
+        // No need for Access-Control-Allow-Origin header
+        // No need for Access-Control-Allow-Methods header
+      };
 
-    final response = await http.post(
-      Uri.https("api.notion.com", "v1/databases/$dbID/query"),
-      headers: headers,
-    );
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      log('Fetched data: $data');
-      _createDeck(data, name, dbID, secret, false, keyHeader,
-          valueHeader); // Reversibility logic
-    } else {
-      log('Failed to fetch decks: ${response.statusCode}');
+      CorsGatewayService corsGateway =
+          CorsGatewayService('https://api.notion.com/v1/databases/');
+
+      final response = await corsGateway.post('$dbID/query', headers);
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        log('Fetched data: $data');
+        _createDeck(data, name, dbID, secret, false, keyHeader,
+            valueHeader); // Reversibility logic
+        return true;
+      } else {
+        log('Failed to fetch decks: ${response.statusCode}');
+        _showDialogError();
+      }
+    } catch (e) {
+      log('Error fetching data: $e');
       _showDialogError();
     }
+    return false;
   }
 
   _showDialogError() {
-    DialogManager.show(context, 'Error', 'Failed to fetch decks');
+    DialogManager.show(
+        context, 'Error', 'Failed to fetch decks. Please double check one of ');
   }
 
   Future<void> _confirmDeleteDeck(Deck deck) async {

@@ -21,7 +21,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
+  # fonts:
+  #   - family: MaterialIcons
+  #     fonts:
+  #       - asset: fonts/MaterialIcons-Regular.ttf
 assets:
   - assets/login.jpg
 

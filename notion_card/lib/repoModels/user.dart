@@ -13,14 +13,12 @@ class User {
 
   static Future<User?> getUser(String uid) async {
     try {
-
       final snapshot =
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
       if (snapshot.exists) {
-                log("[getUser] User found for uid: $uid");
+        log("[getUser] User found for uid: $uid");
 
         return User.fromDocumentSnapshot(snapshot);
-        
       } else {
         log("[getUser] User not found for uid: $uid");
         return null;
