@@ -1,14 +1,10 @@
-import 'dart:convert';
-import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:notion_card/httpService/cors_gateway_service.dart';
-import 'package:notion_card/httpService/notion_service.dart';
+import 'package:notion_card/controller/deck_controller.dart';
 import 'package:notion_card/login.dart';
-import 'package:notion_card/repoModels/card.dart' as repo;
 import 'package:notion_card/repoModels/deck.dart';
 import 'package:notion_card/repoModels/user.dart' as model;
-import 'package:notion_card/utils/id_generator.dart';
+import 'package:notion_card/utils/network_image.dart';
 import 'package:notion_card/utils/text_styles.dart';
 import 'package:notion_card/views/card_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
@@ -25,9 +21,12 @@ class _DecksScreenState extends State<DecksScreen> {
   List<Deck> decks = [];
   bool _isLoading = true;
   final String defaultVersion = "2022-06-28";
-
+  late DeckController _deckController;
+  double topSpacing = 50;
+  double minDisplayPanel = 675;
   @override
   void initState() {
+    _deckController = DeckController(user: widget.user);
     _fetchDecks();
     super.initState();
   }
@@ -44,38 +43,168 @@ class _DecksScreenState extends State<DecksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 120,
-        title: const Text('Flashcards Decks', style: TextStyles.headerBlack),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.info),
-            onPressed: () {
-              __showInfoDialog();
-            },
-          ),
-          const SizedBox(
-            width: 10,
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              _logout();
-            },
-          ),
-        ],
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _buildDeckList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddDeckDialog(context);
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
+
+  Widget _buildDeckList() {
+    double screenWidth = MediaQuery.of(context).size.width;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left Side: Divider with Welcome Message
+        if (screenWidth > minDisplayPanel)
+          Container(
+            padding: EdgeInsets.symmetric(vertical: topSpacing, horizontal: 20),
+            width: MediaQuery.of(context).size.width *
+                0.35, // Adjust width as needed
+            color: const Color.fromARGB(255, 169, 175, 238),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image
+                Image.network(
+                  NetworkImageConstants.logoDino,
+                  width: double.infinity, // Adjust width to fill the container
+                  height: 200, // Adjust height as needed
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Welcome, ${widget.user.name}',
+                  style: TextStyles.headerWhiteWithBorder,
+                ),
+                const SizedBox(height: 20),
+                // Add Deck Gesture
+                GestureDetector(
+                  onTap: () {
+                    _showAddDeckDialog(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.add),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Add Deck',
+                          style: TextStyles.iconText.copyWith(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Info and Logout Rows
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.info),
+                      onPressed: __showInfoDialog,
+                    ),
+                    GestureDetector(
+                      onTap: __showInfoDialog,
+                      child: const Text(
+                        "How to use",
+                        style: TextStyles.iconText,
+                      ),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: _logout,
+                    ),
+                    GestureDetector(
+                      onTap: _logout,
+                      child: const Text(
+                        "Logout",
+                        style: TextStyles.iconText,
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
+          ),
+        // Right Side: Deck List
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: topSpacing),
+                const Text(
+                  'Your Decks',
+                  style: TextStyles.headerBlack,
+                ),
+                if (decks.isEmpty) const Center(child: Text('No decks found')),
+                for (int index = 0; index < decks.length; index++)
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CardView(deck: decks[index]),
+                        ),
+                      );
+                    },
+                    child: Card(
+                      elevation: 3,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      child: ListTile(
+                        title: Text(
+                          '${decks[index].name} (${decks[index].length})',
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: const Text('Tap to view cards'),
+                        trailing: PopupMenuButton(
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry>[
+                            PopupMenuItem(
+                              child: ListTile(
+                                leading: const Icon(Icons.update),
+                                title: const Text('Update'),
+                                onTap: () {
+                                  Navigator.pop(context); // Close the menu
+                                  _updateDeck(decks[index]);
+                                },
+                              ),
+                            ),
+                            PopupMenuItem(
+                              child: ListTile(
+                                leading: const Icon(Icons.delete),
+                                title: const Text('Delete'),
+                                onTap: () {
+                                  Navigator.pop(context); // Close the menu
+                                  _confirmDeleteDeck(decks[index]);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /* Functional methods */
 
   _logout() {
     FirebaseAuth.instance.signOut();
@@ -85,61 +214,60 @@ class _DecksScreenState extends State<DecksScreen> {
     );
   }
 
-  Widget _buildDeckList() {
-    return ListView.builder(
-      itemCount: decks.length,
-      itemBuilder: (context, index) {
-        return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CardView(deck: decks[index]),
-                ),
-              );
-            },
-            child: Card(
-                elevation: 3,
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                child: ListTile(
-                  title: Text(
-                    '${decks[index].name} (${decks[index].length})',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: const Text('Tap to view cards'),
-                  trailing: PopupMenuButton(
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                      PopupMenuItem(
-                        child: ListTile(
-                          leading: const Icon(Icons.update),
-                          title: const Text('Update'),
-                          onTap: () {
-                            Navigator.pop(context); // Close the menu
-                            _updateDeck(decks[index]);
-                          },
-                        ),
-                      ),
-                      PopupMenuItem(
-                        child: ListTile(
-                          leading: const Icon(Icons.delete),
-                          title: const Text('Delete'),
-                          onTap: () {
-                            Navigator.pop(context); // Close the menu
-                            _confirmDeleteDeck(decks[index]);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                )));
-      },
-    );
-  }
+  // Widget _buildDeckList() {
+  //   return ListView.builder(
+  //     itemCount: decks.length,
+  //     itemBuilder: (context, index) {
+  //       return GestureDetector(
+  //           onTap: () {
+  //             Navigator.push(
+  //               context,
+  //               MaterialPageRoute(
+  //                 builder: (context) => CardView(deck: decks[index]),
+  //               ),
+  //             );
+  //           },
+  //           child: Card(
+  //               elevation: 3,
+  //               margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+  //               child: ListTile(
+  //                 title: Text(
+  //                   '${decks[index].name} (${decks[index].length})',
+  //                   style: const TextStyle(
+  //                       fontSize: 18, fontWeight: FontWeight.bold),
+  //                 ),
+  //                 subtitle: const Text('Tap to view cards'),
+  //                 trailing: PopupMenuButton(
+  //                   itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+  //                     PopupMenuItem(
+  //                       child: ListTile(
+  //                         leading: const Icon(Icons.update),
+  //                         title: const Text('Update'),
+  //                         onTap: () {
+  //                           Navigator.pop(context); // Close the menu
+  //                           _updateDeck(decks[index]);
+  //                         },
+  //                       ),
+  //                     ),
+  //                     PopupMenuItem(
+  //                       child: ListTile(
+  //                         leading: const Icon(Icons.delete),
+  //                         title: const Text('Delete'),
+  //                         onTap: () {
+  //                           Navigator.pop(context); // Close the menu
+  //                           _confirmDeleteDeck(decks[index]);
+  //                         },
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               )));
+  //     },
+  //   );
+  // }
 
   Future<void> _showAddDeckDialog(BuildContext context) async {
     String secret = '';
-    String version = defaultVersion; // default
     String dbID = '';
     String keyHeader = '';
     String valueHeader = '';
@@ -164,13 +292,6 @@ class _DecksScreenState extends State<DecksScreen> {
                   decoration: const InputDecoration(labelText: 'Secret'),
                   onChanged: (value) {
                     secret = value;
-                  },
-                ),
-                TextField(
-                  decoration: InputDecoration(
-                      labelText: 'Version', hintText: defaultVersion),
-                  onChanged: (value) {
-                    version = value;
                   },
                 ),
                 TextField(
@@ -204,8 +325,7 @@ class _DecksScreenState extends State<DecksScreen> {
             TextButton(
               child: const Text('Add'),
               onPressed: () {
-                _fetchNotionData(
-                    name, secret, version, dbID, keyHeader, valueHeader);
+                _createDeck(name, dbID, secret, false, keyHeader, valueHeader);
                 Navigator.of(context).pop();
               },
             ),
@@ -228,105 +348,47 @@ class _DecksScreenState extends State<DecksScreen> {
     );
   }
 
-  _createDeck(data, String name, String dbId, String secretToken,
-      bool reversible, String keyHeader, String valueHeader) {
-    List<repo.Card>? cards = NotionService.convertResponseBodyToDeckModel(
-        data, name, keyHeader, valueHeader);
-    if (cards == null) {
-      _showDialogError();
-      return;
-    }
-    Deck deck = Deck(
+  _createDeck(String name, String dbID, String secretToken, bool reversible,
+      String keyHeader, String valueHeader) async {
+    Deck? deck = await _deckController.createDeck(
       name: name,
-      did: IdGenerator.getRandomString(10),
-      dbId: dbId,
+      dbId: dbID,
       secretToken: secretToken,
       reversible: reversible,
       keyHeader: keyHeader,
       valueHeader: valueHeader,
-      length: cards.length,
     );
-    widget.user.createDeckRepo(deck);
-    deck.createCards(cards);
-    if (mounted) {
-      setState(() {
-        decks.insert(0, deck);
-      });
+
+    if (deck != null) {
+      widget.user.createDeckRepo(deck);
+      if (mounted) {
+        setState(() {
+          decks.insert(0, deck);
+        });
+      }
+    } else {
+      _showDialogError();
     }
   }
 
   _updateDeck(Deck deck) async {
-    final Map<String, String> headers = {
-      'Authorization': 'Bearer ${deck.secretToken}',
-      'Notion-Version': defaultVersion,
-      'Content-Type': 'application/json',
-      'X-REQUESTED-WITH': '*'
-    };
-
-    CorsGatewayService corsGateway =
-        CorsGatewayService('https://api.notion.com/v1/databases/');
-
-    final response = await corsGateway.post('${deck.dbId}/query', headers);
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-
-      _deleteDeck(deck);
-      _createDeck(data, deck.name, deck.dbId, deck.secretToken, deck.reversible,
-          deck.keyHeader, deck.valueHeader);
-
-      return true;
-    } else {
-      log('Failed to update deck: ${response.statusCode}');
-      print({response.body});
-
-      _showDialogUpdateError();
-    }
-    if (mounted) {
+    Deck? updatedDeck = await _deckController.updateDeck(deck);
+    if (updatedDeck != null) {
       setState(() {
-        decks.add(deck);
+        decks[decks.indexWhere((d) => d.did == deck.did)] = updatedDeck;
       });
+    } else {
+      _showDialogUpdateError();
     }
   }
 
   _deleteDeck(Deck deck) {
-    widget.user.deleteDeckRepo(deck);
+    _deckController.deleteDeck(deck);
     if (mounted) {
       setState(() {
         decks.removeWhere((d) => d.did == deck.did);
       });
     }
-  }
-
-  Future<bool> _fetchNotionData(String name, String secret, String version,
-      String dbID, String keyHeader, String valueHeader) async {
-    try {
-      final Map<String, String> headers = {
-        'Authorization': 'Bearer $secret',
-        'Notion-Version': version,
-        'Content-Type': 'application/json',
-        'X-REQUESTED-WITH': '*'
-      };
-
-      CorsGatewayService corsGateway =
-          CorsGatewayService('https://api.notion.com/v1/databases/');
-
-      final response = await corsGateway.post('$dbID/query', headers);
-
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        log('Fetched data: $data');
-        _createDeck(data, name, dbID, secret, false, keyHeader,
-            valueHeader); // Reversibility logic
-        return true;
-      } else {
-        log('Failed to fetch decks: ${response.statusCode}');
-        _showDialogError();
-      }
-    } catch (e) {
-      log('Error fetching data: $e');
-      _showDialogError();
-    }
-    return false;
   }
 
   _showDialogError() {

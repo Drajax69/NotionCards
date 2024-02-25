@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:notion_card/description_panel.dart';
+import 'package:notion_card/widget_templates/description_panel.dart';
 import 'package:notion_card/register.dart';
+import 'package:notion_card/utils/network_image.dart';
 import 'package:notion_card/views/deck_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,24 +19,24 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   late model.User user;
-  bool _isLoading = false;
-  final double _showLeftWidthThreshold = 750;
+  final double _showLeftWidthThreshold = 720;
   final double _showLeftHeightThreshold = 550;
   final double _showSignUpWidthThreshold = 300;
-  final String imageURL = "https://picsum.photos/200/300";
   late Image image = Image.network(
-    imageURL, // Replace with your image URL
+    NetworkImageConstants.loginBackgroundDinoUrl, // Replace with your image URL
   );
   bool isLoading = true;
+
   @override
   void initState() {
-    _loadImage();
     super.initState();
+    _loadImage();
   }
 
   _loadImage() async {
     Image imageLoad = Image.network(
-      imageURL, // Replace with your image URL
+      NetworkImageConstants
+          .loginBackgroundDinoUrl, // Replace with your image URL
     );
     setState(() {
       image = imageLoad;
@@ -45,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _signInWithEmailAndPassword() async {
     setState(() {
-      _isLoading = true;
+      isLoading = true;
     });
     try {
       final UserCredential userCredential =
@@ -71,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
       _showLoginFailDialog();
     } finally {
       setState(() {
-        _isLoading = false;
+        isLoading = false;
       });
     }
   }
@@ -122,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           if (screenWidth > _showLeftWidthThreshold &&
               screenHeight > _showLeftHeightThreshold)
-            const DescriptionPanel(),
+            DescriptionPanel(image: image),
           Expanded(
             flex: 2,
             child: Padding(
@@ -213,7 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                         obscureText: true,
                       ),
                       const SizedBox(height: 25),
-                      _isLoading
+                      isLoading
                           ? const CircularProgressIndicator()
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(10),

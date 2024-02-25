@@ -5,9 +5,11 @@ import 'deck.dart';
 class User {
   final String uid;
   final Timestamp creationTimestamp;
+  final String name;
 
-  User({
+  User( {required this.name,
     required this.uid,
+    
     required this.creationTimestamp,
   });
 
@@ -110,6 +112,7 @@ class User {
     final data = snapshot.data() as Map<String, dynamic>;
     return User(
       uid: data['uid'] ?? '',
+      name: data['name'] ?? '',
       creationTimestamp: data['creationTimestamp'] ?? Timestamp.now(),
     );
   }
@@ -118,6 +121,7 @@ class User {
     return {
       'uid': uid,
       'creationTimestamp': creationTimestamp,
+      'name': name,
     };
   }
 }

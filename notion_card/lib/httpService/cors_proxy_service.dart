@@ -1,9 +1,12 @@
+import 'dart:developer';
+
 import 'package:http/http.dart' as http;
 
-class CorsGatewayService {
+class CorsProxyService {
   final String baseUrl;
   final String corsProxyUrl = 'https://corsproxy.io/?';
-  CorsGatewayService(this.baseUrl);
+
+  CorsProxyService({required this.baseUrl});
 
   Future<http.Response> post(
       String endpoint, Map<String, String> headers) async {
@@ -16,6 +19,9 @@ class CorsGatewayService {
       );
       return response;
     } catch (e) {
+      log(
+        '[proxy-service] Error: $e',
+      );
       // Handle error or propagate it
       rethrow;
     }

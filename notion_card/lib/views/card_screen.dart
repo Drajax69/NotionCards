@@ -34,6 +34,7 @@ class _CardViewState extends State<CardView> {
 
   void _fetchCards() async {
     cards = await widget.deck.getCards();
+    cards.shuffle();
     setState(() {
       isLoading = false;
     });

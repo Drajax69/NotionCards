@@ -2,8 +2,9 @@ import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:notion_card/description_panel.dart';
+import 'package:notion_card/widget_templates/description_panel.dart';
 import 'package:notion_card/login.dart';
+import 'package:notion_card/utils/network_image.dart';
 import 'package:notion_card/views/deck_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,11 +21,30 @@ class _RegisterPageState extends State<RegisterPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+
   late model.User user;
-  bool _isLoading = false;
-  final double _showLeftWidthThreshold = 750;
+  bool _isLoading = true;
+  final double _showLeftWidthThreshold = 720;
   final double _showLeftHeightThreshold = 550;
   final double _showLoginWidthThreshold = 300;
+  late Image image = Image.network(
+    NetworkImageConstants.loginBackgroundDinoUrl, // Replace with your image URL
+  );
+
+  @override
+  initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
 
   Future<void> _registerWithEmailAndPassword() async {
     setState(() {
@@ -38,8 +58,10 @@ class _RegisterPageState extends State<RegisterPage> {
       );
       if (userCredential.user != null) {
         final uid = userCredential.user?.uid ?? "FAILED_UID";
-        model.User user =
-            model.User(uid: uid, creationTimestamp: Timestamp.now());
+        model.User user = model.User(
+            uid: uid,
+            creationTimestamp: Timestamp.now(),
+            name: _nameController.text);
         model.User.createUser(user);
         setState(() {
           this.user = user;
@@ -54,6 +76,17 @@ class _RegisterPageState extends State<RegisterPage> {
         _isLoading = false;
       });
     }
+  }
+
+  _loadImage() async {
+    Image imageLoad = Image.network(
+      NetworkImageConstants
+          .loginBackgroundDinoUrl, // Replace with your image URL
+    );
+    setState(() {
+      image = imageLoad;
+      _isLoading = false;
+    });
   }
 
   _goDecks() {
@@ -83,7 +116,9 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: Row(
@@ -91,7 +126,7 @@ class _RegisterPageState extends State<RegisterPage> {
         children: [
           if (screenWidth > _showLeftWidthThreshold &&
               screenHeight > _showLeftHeightThreshold)
-            const DescriptionPanel(),
+            DescriptionPanel(image: image),
           Expanded(
             flex: 2,
             child: Padding(
@@ -182,6 +217,40 @@ class _RegisterPageState extends State<RegisterPage> {
                         obscureText: true,
                       ),
                       const SizedBox(height: 25),
+                      TextField(
+                        controller: _nameController,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF393939),
+                          fontSize: 13,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Name',
+                          labelStyle: TextStyle(
+                            color: Color(0xFF755DC1),
+                            fontSize: 15,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide(
+                              width: 1,
+                              color: Color(0xFF837E93),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            borderSide: BorderSide(
+                              width: 1,
+                              color: Color(0xFF9F7BFF),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       _isLoading
                           ? const CircularProgressIndicator()
                           : ClipRRect(
