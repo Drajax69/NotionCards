@@ -255,11 +255,33 @@ class _DecksScreenState extends State<DecksScreen> {
   }
 
   _updateDeck(Deck deck) async {
-    // await _deleteDeck(deck);
+    final Map<String, String> headers = {
+      'Authorization': 'Bearer ${deck.secretToken}',
+      'Notion-Version': defaultVersion,
+      'Content-Type': 'application/json',
+      'X-REQUESTED-WITH': '*'
+    };
 
-    // bool fetchSuccess = await _fetchNotionData(deck.name, deck.secretToken,
-    //     defaultVersion, deck.dbId, deck.keyHeader, deck.valueHeader);
+    CorsGatewayService corsGateway =
+        CorsGatewayService('https://api.notion.com/v1/databases/');
 
+    final response = await corsGateway.post('${deck.dbId}/query', headers);
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      // List<repo.Card> cards = NotionService.convertResponseBodyToDeckModel(
+      //         data, deck.name, deck.keyHeader, deck.valueHeader) ??
+      //     [];
+      _deleteDeck(deck);
+      _createDeck(data, deck.name, deck.dbId, deck.secretToken, deck.reversible,
+          deck.keyHeader, deck.valueHeader);
+
+      return true;
+    } else {
+      log('Failed to update deck: ${response.statusCode}');
+      print({response.body});
+
+      _showDialogUpdateError();
+    }
     if (mounted) {
       setState(() {
         decks.add(deck);
@@ -284,8 +306,6 @@ class _DecksScreenState extends State<DecksScreen> {
         'Notion-Version': version,
         'Content-Type': 'application/json',
         'X-REQUESTED-WITH': '*'
-        // No need for Access-Control-Allow-Origin header
-        // No need for Access-Control-Allow-Methods header
       };
 
       CorsGatewayService corsGateway =
@@ -311,8 +331,12 @@ class _DecksScreenState extends State<DecksScreen> {
   }
 
   _showDialogError() {
-    DialogManager.show(
-        context, 'Error', 'Failed to fetch decks. Please double check one of ');
+    DialogManager.show(context, 'Error',
+        'Failed to fetch decks. Please ensure the details are correct.');
+  }
+
+  _showDialogUpdateError() {
+    DialogManager.show(context, 'Error', 'Failed to update deck. Try again.');
   }
 
   Future<void> _confirmDeleteDeck(Deck deck) async {

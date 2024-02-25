@@ -1,15 +1,13 @@
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class CorsGatewayService {
   final String baseUrl;
-  final String corsAnywhereUrl = 'https://cors-anywhere.herokuapp.com/';
-
+  final String corsProxyUrl = 'https://corsproxy.io/?';
   CorsGatewayService(this.baseUrl);
 
   Future<http.Response> post(
       String endpoint, Map<String, String> headers) async {
-    final String proxyUrl = '$corsAnywhereUrl$baseUrl$endpoint';
+    final String proxyUrl = '$corsProxyUrl$baseUrl$endpoint';
 
     try {
       final response = await http.post(

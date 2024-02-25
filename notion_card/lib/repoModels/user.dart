@@ -79,6 +79,7 @@ class User {
   }
 
   Future<void> updateDeckRepo(Deck deck) async {
+    /* Update the deck in the user's collection by fetching from data notion */
     try {
       await FirebaseFirestore.instance
           .collection('users')
