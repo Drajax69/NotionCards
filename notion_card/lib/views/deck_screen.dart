@@ -103,7 +103,7 @@ class _DecksScreenState extends State<DecksScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 child: ListTile(
                   title: Text(
-                    decks[index].name,
+                    '${decks[index].name} (${decks[index].length})',
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -244,12 +244,13 @@ class _DecksScreenState extends State<DecksScreen> {
       reversible: reversible,
       keyHeader: keyHeader,
       valueHeader: valueHeader,
+      length: cards.length,
     );
     widget.user.createDeckRepo(deck);
     deck.createCards(cards);
     if (mounted) {
       setState(() {
-        decks.add(deck);
+        decks.insert(0, deck);
       });
     }
   }
@@ -268,9 +269,7 @@ class _DecksScreenState extends State<DecksScreen> {
     final response = await corsGateway.post('${deck.dbId}/query', headers);
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      // List<repo.Card> cards = NotionService.convertResponseBodyToDeckModel(
-      //         data, deck.name, deck.keyHeader, deck.valueHeader) ??
-      //     [];
+
       _deleteDeck(deck);
       _createDeck(data, deck.name, deck.dbId, deck.secretToken, deck.reversible,
           deck.keyHeader, deck.valueHeader);

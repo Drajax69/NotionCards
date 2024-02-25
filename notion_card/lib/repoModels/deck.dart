@@ -7,12 +7,13 @@ class Deck {
   final String name;
   final String did; // Deck ID
   final String dbId; // Database ID
+  final int length;
   final String secretToken;
   final bool reversible;
   final String keyHeader;
   final String valueHeader;
 
-  Deck({
+  Deck({ required this.length,
     required this.name,
     required this.did,
     required this.dbId,
@@ -31,12 +32,14 @@ class Deck {
       'reversible': reversible,
       'keyHeader': keyHeader,
       'valueHeader': valueHeader,
+      'length': length,
     };
   }
 
   static Deck fromDocumentSnapshot(DocumentSnapshot snapshot) {
     final data = snapshot.data() as Map<String, dynamic>;
     return Deck(
+      length: data['length'] ?? 0,
       name: data['name'] ?? '',
       did: data['did'] ?? '',
       dbId: data['dbId'] ?? '',
@@ -56,6 +59,7 @@ class Deck {
       reversible: map['reversible'] ?? false,
       keyHeader: map['keyHeader'] ?? '',
       valueHeader: map['valueHeader'] ?? '',
+      length: map['length'] ?? 0,
     );
   }
 

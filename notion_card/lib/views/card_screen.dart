@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:notion_card/repoModels/deck.dart';
 import 'package:notion_card/repoModels/card.dart' as repo;
+import 'package:notion_card/utils/text_styles.dart';
 
 class CardView extends StatefulWidget {
   final Deck deck;
@@ -103,6 +104,8 @@ class _CardViewState extends State<CardView> {
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.2,
                 ),
+                Text("${currentIndex + 1}/${cards.length}",
+                    style: TextStyles.bodyRegular),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 1000),
                   child: _buildFlashcard(),
