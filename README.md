@@ -45,3 +45,11 @@ Link: https://notioncards-23b9e.web.app
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or pull requests for any improvements or additional features you'd like to see in the app.
+
+
+## Work in Progress
+- Logout and Add deck in mobile view
+- Vertical Responsiveness
+- Beautify Card View Page
+- Reducing image load-time from application start (logo, login, etc.)
+ 
