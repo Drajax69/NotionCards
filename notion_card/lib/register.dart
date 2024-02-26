@@ -24,18 +24,16 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _nameController = TextEditingController();
 
   late model.User user;
-  bool _isLoading = true;
+  bool _isLoading = false;
   final double _showLeftWidthThreshold = 720;
   final double _showLeftHeightThreshold = 550;
   final double _showLoginWidthThreshold = 300;
-  late Image image = Image.network(
-    NetworkImageConstants.loginBackgroundDinoUrl, // Replace with your image URL
-  );
+  // WIP: Change this to different image once design finishes
+  Image image = NetworkImageConstants.getLoginBackgroundDinoImage();
 
   @override
   initState() {
     super.initState();
-    _loadImage();
   }
 
   @override
@@ -76,17 +74,6 @@ class _RegisterPageState extends State<RegisterPage> {
         _isLoading = false;
       });
     }
-  }
-
-  _loadImage() async {
-    Image imageLoad = Image.network(
-      NetworkImageConstants
-          .loginBackgroundDinoUrl, // Replace with your image URL
-    );
-    setState(() {
-      image = imageLoad;
-      _isLoading = false;
-    });
   }
 
   _goDecks() {

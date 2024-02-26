@@ -24,6 +24,10 @@ class _DecksScreenState extends State<DecksScreen> {
   late DeckController _deckController;
   double topSpacing = 50;
   double minDisplayPanel = 675;
+  final double _leftPanelProportion = 0.4;
+  Image logo = NetworkImageConstants.getLogoDinoImage(
+      width: double.infinity, height: 200);
+  final double _titleListSpacing = 20;
   @override
   void initState() {
     _deckController = DeckController(user: widget.user);
@@ -42,34 +46,55 @@ class _DecksScreenState extends State<DecksScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool phoneDisplay = screenWidth < minDisplayPanel;
     return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildDeckList(),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _buildDeckList(phoneDisplay),
+        floatingActionButton: _buildFloatingActionButtons(phoneDisplay));
+  }
+
+  Widget? _buildFloatingActionButtons(bool phoneDisplay) {
+    if (!phoneDisplay) {
+      return null;
+    }
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        FloatingActionButton(
+          onPressed: _logout,
+          child: const Icon(Icons.logout),
+        ),
+        const SizedBox(height: 16),
+        FloatingActionButton(
+          onPressed: __showInfoDialog,
+          child: const Icon(Icons.info),
+        ),
+        const SizedBox(height: 16),
+        FloatingActionButton(
+          onPressed: _showAddDeckDialog,
+          child: const Icon(Icons.add),
+        ),
+      ],
     );
   }
 
-  Widget _buildDeckList() {
-    double screenWidth = MediaQuery.of(context).size.width;
+  Widget _buildDeckList(bool phoneDisplay) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Left Side: Divider with Welcome Message
-        if (screenWidth > minDisplayPanel)
+        if (!phoneDisplay)
           Container(
             padding: EdgeInsets.symmetric(vertical: topSpacing, horizontal: 20),
             width: MediaQuery.of(context).size.width *
-                0.35, // Adjust width as needed
+                _leftPanelProportion, // Adjust width as needed
             color: const Color.fromARGB(255, 169, 175, 238),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image
-                Image.network(
-                  NetworkImageConstants.logoDino,
-                  width: double.infinity, // Adjust width to fill the container
-                  height: 200, // Adjust height as needed
-                ),
+                logo, // Dinosaur logo
                 const SizedBox(height: 10),
                 Text(
                   'Welcome, ${widget.user.name}',
@@ -79,7 +104,7 @@ class _DecksScreenState extends State<DecksScreen> {
                 // Add Deck Gesture
                 GestureDetector(
                   onTap: () {
-                    _showAddDeckDialog(context);
+                    _showAddDeckDialog();
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -100,8 +125,8 @@ class _DecksScreenState extends State<DecksScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Info and Logout Rows
+                const Spacer(),
+                // Info and Logout
                 Row(
                   children: [
                     IconButton(
@@ -117,7 +142,6 @@ class _DecksScreenState extends State<DecksScreen> {
                     )
                   ],
                 ),
-                const SizedBox(height: 10),
                 Row(
                   children: [
                     IconButton(
@@ -142,10 +166,16 @@ class _DecksScreenState extends State<DecksScreen> {
             child: Column(
               children: [
                 SizedBox(height: topSpacing),
-                const Text(
-                  'Your Decks',
-                  style: TextStyles.headerBlack,
+                Center(
+                  // padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    phoneDisplay
+                        ? '${widget.user.name.split(' ').first}\'s Decks'
+                        : 'Your Decks',
+                    style: TextStyles.headerBlack,
+                  ),
                 ),
+                SizedBox(height: _titleListSpacing),
                 if (decks.isEmpty) const Center(child: Text('No decks found')),
                 for (int index = 0; index < decks.length; index++)
                   GestureDetector(
@@ -214,66 +244,14 @@ class _DecksScreenState extends State<DecksScreen> {
     );
   }
 
-  // Widget _buildDeckList() {
-  //   return ListView.builder(
-  //     itemCount: decks.length,
-  //     itemBuilder: (context, index) {
-  //       return GestureDetector(
-  //           onTap: () {
-  //             Navigator.push(
-  //               context,
-  //               MaterialPageRoute(
-  //                 builder: (context) => CardView(deck: decks[index]),
-  //               ),
-  //             );
-  //           },
-  //           child: Card(
-  //               elevation: 3,
-  //               margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-  //               child: ListTile(
-  //                 title: Text(
-  //                   '${decks[index].name} (${decks[index].length})',
-  //                   style: const TextStyle(
-  //                       fontSize: 18, fontWeight: FontWeight.bold),
-  //                 ),
-  //                 subtitle: const Text('Tap to view cards'),
-  //                 trailing: PopupMenuButton(
-  //                   itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-  //                     PopupMenuItem(
-  //                       child: ListTile(
-  //                         leading: const Icon(Icons.update),
-  //                         title: const Text('Update'),
-  //                         onTap: () {
-  //                           Navigator.pop(context); // Close the menu
-  //                           _updateDeck(decks[index]);
-  //                         },
-  //                       ),
-  //                     ),
-  //                     PopupMenuItem(
-  //                       child: ListTile(
-  //                         leading: const Icon(Icons.delete),
-  //                         title: const Text('Delete'),
-  //                         onTap: () {
-  //                           Navigator.pop(context); // Close the menu
-  //                           _confirmDeleteDeck(decks[index]);
-  //                         },
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               )));
-  //     },
-  //   );
-  // }
-
-  Future<void> _showAddDeckDialog(BuildContext context) async {
+  _showAddDeckDialog() {
     String secret = '';
     String dbID = '';
     String keyHeader = '';
     String valueHeader = '';
     String name = '';
 
-    await showDialog(
+    showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

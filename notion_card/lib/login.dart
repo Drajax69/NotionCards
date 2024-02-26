@@ -22,27 +22,14 @@ class _LoginPageState extends State<LoginPage> {
   final double _showLeftWidthThreshold = 720;
   final double _showLeftHeightThreshold = 550;
   final double _showSignUpWidthThreshold = 300;
-  late Image image = Image.network(
-    NetworkImageConstants.loginBackgroundDinoUrl, // Replace with your image URL
-  );
-  bool isLoading = true;
+  Image image = NetworkImageConstants.getLoginBackgroundDinoImage();
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadImage();
   }
 
-  _loadImage() async {
-    Image imageLoad = Image.network(
-      NetworkImageConstants
-          .loginBackgroundDinoUrl, // Replace with your image URL
-    );
-    setState(() {
-      image = imageLoad;
-      isLoading = false;
-    });
-  }
 
   Future<void> _signInWithEmailAndPassword() async {
     setState(() {

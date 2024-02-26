@@ -41,7 +41,6 @@ class DeckController {
         var data = json.decode(response.body);
         List<repo.Card>? cards = NotionService.convertResponseBodyToDeckModel(
             data, name, keyHeader, valueHeader);
-        print(cards?.length);
         if (cards == null) {
           return null;
         }

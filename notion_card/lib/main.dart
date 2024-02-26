@@ -56,10 +56,3 @@ class NotionCards extends StatelessWidget {
     return null;
   }
 }
-
-
-// curl -X POST 'https://api.notion.com/v1/databases/c125b18abaee487f8380ba20e1a9f629/query' \
-//   -H 'Authorization: Bearer 'secret_TxGjOD26XUKPaTsCNwY5XdRaANtvHVywJVzK9mQERjV'' \
-//   -H 'Notion-Version: 2022-06-28' \
-//   -H "Content-Type: application/json" 
-//02c6e1f41ae046dcbbc688599ddee051

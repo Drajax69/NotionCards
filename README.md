@@ -4,11 +4,13 @@ This Flutter app allows users to create flashcard decks from Notion databases an
 Link: https://notioncards-23b9e.web.app
 
 **Requirements from Notion**
+
 - You need to setup a Notion Integration to your workspace to get:
   - Secret Token
   - Database ID
 - You also need to add integration to pages containing the database
-- How to do that: https://developers.notion.com/docs/create-a-notion-integration 
+- How to do that: https://developers.notion.com/docs/create-a-notion-integration
+
 ## Features
 
 - **Authentication**: Users can log in using Firebase Authentication.
@@ -46,10 +48,6 @@ Link: https://notioncards-23b9e.web.app
 
 Contributions are welcome! Feel free to open issues or pull requests for any improvements or additional features you'd like to see in the app.
 
-
 ## Work in Progress
-- Logout and Add deck in mobile view
-- Vertical Responsiveness
+
 - Beautify Card View Page
-- Reducing image load-time from application start (logo, login, etc.)
- 
