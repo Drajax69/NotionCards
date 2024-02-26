@@ -22,9 +22,11 @@ class _DecksScreenState extends State<DecksScreen> {
   bool _isLoading = true;
   final String defaultVersion = "2022-06-28";
   late DeckController _deckController;
-  double topSpacing = 50;
-  double minDisplayPanel = 675;
+  final double topSpacing = 50;
+  final double _minDisplayPanel = 550;
+  final double _minPortaitHeight = 650;
   final double _leftPanelProportion = 0.4;
+  final double _minWindowHeight = 430;
   Image logo = NetworkImageConstants.getLogoDinoImage(
       width: double.infinity, height: 200);
   final double _titleListSpacing = 20;
@@ -47,11 +49,14 @@ class _DecksScreenState extends State<DecksScreen> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    bool phoneDisplay = screenWidth < minDisplayPanel;
+    double screenHeight = MediaQuery.of(context).size.height;
+    bool phoneDisplay = screenWidth < _minDisplayPanel;
+    bool isPortrait = screenHeight > _minPortaitHeight;
+    bool showLogo = screenHeight > _minWindowHeight;
     return Scaffold(
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : _buildDeckList(phoneDisplay),
+            : _buildDeckList(phoneDisplay, isPortrait, showLogo),
         floatingActionButton: _buildFloatingActionButtons(phoneDisplay));
   }
 
@@ -80,26 +85,36 @@ class _DecksScreenState extends State<DecksScreen> {
     );
   }
 
-  Widget _buildDeckList(bool phoneDisplay) {
+  Widget _buildDeckList(bool phoneDisplay, bool isPortrait, bool showLogo) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Left Side: Divider with Welcome Message
         if (!phoneDisplay)
           Container(
-            padding: EdgeInsets.symmetric(vertical: topSpacing, horizontal: 20),
+            padding: EdgeInsets.symmetric(
+                vertical: isPortrait ? topSpacing : 10, horizontal: 20),
             width: MediaQuery.of(context).size.width *
                 _leftPanelProportion, // Adjust width as needed
             color: const Color.fromARGB(255, 169, 175, 238),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                logo, // Dinosaur logo
-                const SizedBox(height: 10),
-                Text(
-                  'Welcome, ${widget.user.name}',
-                  style: TextStyles.headerWhiteWithBorder,
+                Center(
+                  child: Image(
+                    image: logo.image,
+                    height: isPortrait ? 200 : 100,
+                  ),
                 ),
+                if (showLogo) const SizedBox(height: 10),
+                if (showLogo)
+                  Text(
+                    'Welcome, ${widget.user.name}',
+                    style: isPortrait
+                        ? TextStyles.headerWhiteWithBorder
+                        : TextStyles.headerWhiteWithBorder
+                            .copyWith(fontSize: 35),
+                  ),
                 const SizedBox(height: 20),
                 // Add Deck Gesture
                 GestureDetector(
@@ -125,7 +140,7 @@ class _DecksScreenState extends State<DecksScreen> {
                     ),
                   ),
                 ),
-                const Spacer(),
+                if (isPortrait) const Spacer(),
                 // Info and Logout
                 Row(
                   children: [
@@ -169,7 +184,7 @@ class _DecksScreenState extends State<DecksScreen> {
                 Center(
                   // padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
-                    phoneDisplay
+                    phoneDisplay || !showLogo
                         ? '${widget.user.name.split(' ').first}\'s Decks'
                         : 'Your Decks',
                     style: TextStyles.headerBlack,
