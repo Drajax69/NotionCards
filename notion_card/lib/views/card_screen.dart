@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:notion_card/utils/constant.dart';
 import 'package:notion_card/repoModels/deck.dart';
 import 'package:notion_card/repoModels/card.dart' as repo;
 import 'package:notion_card/utils/text_styles.dart';
@@ -18,19 +20,187 @@ class _CardViewState extends State<CardView> {
   bool isLoading = true;
   int currentIndex = 0;
   bool isFlipped = false;
-  Timer? _timer;
+  final double _toolbarHeight = 60;
+  final double _minCardWidth = 300;
+  late Color cardColor;
+  List<Color> colorOptions = Constants.cardColorOptions;
 
   @override
   void initState() {
     super.initState();
     _fetchCards();
+    cardColor =
+        colorOptions[0]; // Initialize card color with the first color option
   }
 
+  /* UI */
+
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (cards.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.deck.name,
+            style: TextStyles.cardHeaderBlack,
+          ),
+          toolbarHeight: _toolbarHeight,
+        ),
+        body: const Center(child: Text('No cards found')),
+      );
+    } else {
+      return Scaffold(
+        appBar: AppBar(
+          toolbarHeight: _toolbarHeight,
+          title: Center(
+            child: Text(
+              widget.deck.name,
+              style: TextStyles.cardHeaderBlack,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.color_lens),
+              onPressed: _showColorPicker,
+            ),
+          ],
+        ),
+        body: GestureDetector(
+          // Swipe gesture detection
+          onHorizontalDragEnd: (details) {
+            if (details.primaryVelocity! > 0) {
+              // Swiped from left to right
+              _showPreviousCard();
+            } else if (details.primaryVelocity! < 0) {
+              // Swiped from right to left
+              _showNextCard();
+            }
+          },
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: screenHeight * 0.5,
+                maxWidth: max(screenWidth * 0.5, _minCardWidth),
+              ),
+              child: PageView.builder(
+                itemCount: cards.length,
+                controller: PageController(initialPage: currentIndex),
+                onPageChanged: (index) {
+                  setState(() {
+                    currentIndex = index;
+                    isFlipped = false;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  return _buildFlashcard(index);
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
+
+  Widget _buildFlashcard(int index) {
+    return GestureDetector(
+      onTap: _flipCard,
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          child: Card(
+            color: cardColor,
+            elevation: 6,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Container(
+                key: ValueKey<int>(isFlipped ? 1 : 0),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          isFlipped
+                              ? cards[index].answer
+                              : cards[index].question,
+                          textAlign: TextAlign.center,
+                          style: TextStyles.cardTextFont,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          "${index + 1}/${cards.length}",
+                          style: TextStyles.cardIndexingFont,
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showColorPicker() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('Select Card Color'),
+          content: SizedBox(
+            width: 300, // Adjust the width as needed
+            height: 300, // Adjust the height as needed
+            child: GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              childAspectRatio: 1.0,
+              mainAxisSpacing: 8.0,
+              crossAxisSpacing: 8.0,
+              children: colorOptions.map((color) {
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      cardColor = color;
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /* Logic functions */
 
   void _fetchCards() async {
     cards = await widget.deck.getCards();
@@ -78,91 +248,5 @@ class _CardViewState extends State<CardView> {
     setState(() {
       isFlipped = !isFlipped;
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    } else if (cards.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Cards'),
-        ),
-        body: const Center(child: Text('No cards found')),
-      );
-    } else {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Cards'),
-        ),
-        body: SingleChildScrollView(
-          physics: const NeverScrollableScrollPhysics(),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.2,
-                ),
-                Text("${currentIndex + 1}/${cards.length}",
-                    style: TextStyles.bodyRegular),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 1000),
-                  child: _buildFlashcard(),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: _showPreviousCard,
-                      child: const Text('Previous'),
-                    ),
-                    ElevatedButton(
-                      onPressed: _showNextCard,
-                      child: const Text('Next'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildFlashcard() {
-    return GestureDetector(
-      onTap: _flipCard,
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.5,
-        height: MediaQuery.of(context).size.height * 0.5,
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        child: Card(
-          elevation: 5,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: Container(
-              key: ValueKey<int>(isFlipped ? 1 : 0),
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Text(
-                  isFlipped
-                      ? cards[currentIndex].answer
-                      : cards[currentIndex].question,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

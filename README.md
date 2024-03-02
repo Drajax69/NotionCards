@@ -1,5 +1,7 @@
 # Notion Card Flutter App
 
+Current version: 1.2.1
+
 This Flutter app allows users to create flashcard decks from Notion databases and study them.
 Link: https://notioncards-23b9e.web.app
 
@@ -9,17 +11,22 @@ Link: https://notioncards-23b9e.web.app
   - Secret Token
   - Database ID
 - You also need to add integration to pages containing the database
-- How to do that: https://developers.notion.com/docs/create-a-notion-integration
+- See https://developers.notion.com/docs/create-a-notion-integration for more
 
 ## Features
 
 - **Authentication**: Users can log in using Firebase Authentication.
 - **Decks Screen**: Users can view a list of flashcard decks they have created.
-- **Add Deck**: Users can add a new deck by providing details such as name, secret, version, database ID, key header, and value header.
-- **Fetch Notion Data**: The app fetches data from a specified Notion database using the provided secret, version, and database ID.
+
+  - Users can add a deck using any columns from their Notion database (need to specify if not using database title as questions)
+  - Users can create a reversed deck where all the questions and answers are swapped
+  - Users can update their decks at any time
+  - Users can delete decks without affecting Notion database
 - **Card View**: Users can view individual flashcards within a deck, with the ability to flip between question and answer.
-- **Next and Previous Cards**: Users can navigate between cards using the Next and Previous buttons.
-- **Delete Deck**: Users can delete decks by confirming their action through a dialog.
+
+  - Users can specify what colour they want their cards to be (9 options).
+  - Swipable and can be viewed using any device (i.e phone, tablet, laptop...).
+  - Cards in a deck are randomized for a better learning experience.
 
 ## Dependencies
 
@@ -34,7 +41,8 @@ Link: https://notioncards-23b9e.web.app
 2. Make sure you have Flutter installed on your machine.
 3. Run `flutter pub get` to install dependencies.
 4. Set up Firebase Authentication and update `firebase_options.dart` with your Firebase project configuration.
-5. Run the app using `flutter run`.
+5. Set *devEnv* NetworkImageConstants to true
+6. Run the app using `flutter run`.
 
 ## Usage
 
@@ -42,7 +50,6 @@ Link: https://notioncards-23b9e.web.app
 - View existing decks on the Decks Screen.
 - Add new decks by providing the necessary details.
 - Navigate through flashcards within a deck using Next and Previous buttons.
-- Long-press on a deck to delete it (with confirmation).
 
 ## Contributing
 
