@@ -47,7 +47,3 @@ Link: https://notioncards-23b9e.web.app
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or pull requests for any improvements or additional features you'd like to see in the app.
-
-## Work in Progress
-
-- Beautify Card View Page

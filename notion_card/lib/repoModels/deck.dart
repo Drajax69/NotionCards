@@ -9,16 +9,19 @@ class Deck {
   final String dbId; // Database ID
   final int length;
   final String secretToken;
-  final bool reversible;
+  final bool isDbTitle;
+  final bool isReversed;
   final String keyHeader;
   final String valueHeader;
 
-  Deck({ required this.length,
+  Deck({
+    required this.length,
     required this.name,
+    required this.isReversed,
     required this.did,
     required this.dbId,
     required this.secretToken,
-    required this.reversible,
+    required this.isDbTitle,
     required this.keyHeader,
     required this.valueHeader,
   });
@@ -29,10 +32,11 @@ class Deck {
       'did': did,
       'dbId': dbId,
       'secretToken': secretToken,
-      'reversible': reversible,
+      'isDbTitle': isDbTitle,
       'keyHeader': keyHeader,
       'valueHeader': valueHeader,
       'length': length,
+      'isReversed': isReversed,
     };
   }
 
@@ -44,9 +48,10 @@ class Deck {
       did: data['did'] ?? '',
       dbId: data['dbId'] ?? '',
       secretToken: data['secretToken'] ?? '',
-      reversible: data['reversible'] ?? false,
+      isDbTitle: data['isDbTitle'] ?? false,
       keyHeader: data['keyHeader'] ?? '',
       valueHeader: data['valueHeader'] ?? '',
+      isReversed: data['isReversed'] ?? true,
     );
   }
 
@@ -56,10 +61,11 @@ class Deck {
       did: map['did'] ?? '',
       dbId: map['dbId'] ?? '',
       secretToken: map['secretToken'] ?? '',
-      reversible: map['reversible'] ?? false,
+      isDbTitle: map['isDbTitle'] ?? false,
       keyHeader: map['keyHeader'] ?? '',
       valueHeader: map['valueHeader'] ?? '',
       length: map['length'] ?? 0,
+      isReversed: map['isReversed'] ?? true,
     );
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart' as ui;
 
 class NetworkImageConstants {
-  static const testEnv = true;
+  static const devEnv = true;
 
   static const String loginBackgroundUrl = 'loginbg.png';
 
@@ -10,7 +10,7 @@ class NetworkImageConstants {
   static const String logoDinoUrl = "logoDino.png";
 
   static ui.Image getLoginBackgroundImage({double? width, double? height}) {
-    if (testEnv) {
+    if (devEnv) {
       return ui.Image.asset(loginBackgroundUrl, width: width, height: height);
     } else {
       return ui.Image.network(loginBackgroundUrl, width: width, height: height);
@@ -18,7 +18,7 @@ class NetworkImageConstants {
   }
 
   static ui.Image getLoginBackgroundDinoImage({double? width, double? height}) {
-    if (testEnv) {
+    if (devEnv) {
       return ui.Image.asset(loginBackgroundDinoUrl,
           width: width, height: height);
     } else {
@@ -28,7 +28,7 @@ class NetworkImageConstants {
   }
 
   static ui.Image getLogoDinoImage({double? width, double? height}) {
-    if (testEnv) {
+    if (devEnv) {
       return ui.Image.asset(logoDinoUrl, width: width, height: height);
     } else {
       return ui.Image.network(logoDinoUrl, width: width, height: height);

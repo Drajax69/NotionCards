@@ -1,7 +1,7 @@
 name: notion_card
 description: "Integrate your notion database with Flashcards"
 publish_to: 'none'
-version: 1.1.2
+version: 1.2.0
 
 environment:
   sdk: '>=3.2.1 <4.0.0'

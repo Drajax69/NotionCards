@@ -8,14 +8,19 @@ class NotionService {
       Map<String, dynamic> responseBody,
       String name,
       String key,
-      String value) {
-    log("[convert-to-deck] Using $name, $key, $value");
+      String value,
+      bool isDbTitle,
+      bool isReversed) {
     try {
       final List<dynamic> results = responseBody['results'];
       final List<Card> cards = results.map((result) {
         final properties = result['properties'];
-        final String question = properties[key]['title'][0]['plain_text'];
-        final String answer = properties[value]['rich_text'][0]['plain_text'];
+        final String question = (isDbTitle && !isReversed)
+            ? properties[key]['title'][0]['plain_text']
+            : properties[key]['rich_text'][0]['plain_text'];
+        final String answer = (isReversed && isDbTitle)
+            ? properties[value]['title'][0]['plain_text']
+            : properties[value]['rich_text'][0]['plain_text'];
         return Card(
             cid: IdGenerator.getRandomString(10),
             question: question,
@@ -24,7 +29,7 @@ class NotionService {
 
       return cards;
     } catch (e) {
-      log('Error converting response body to Deck model: $e');
+      log('[ERR! notion-service]: $e');
       return null;
     }
   }

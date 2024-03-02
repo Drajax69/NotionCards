@@ -23,13 +23,16 @@ class _DecksScreenState extends State<DecksScreen> {
   final String defaultVersion = "2022-06-28";
   late DeckController _deckController;
   final double topSpacing = 50;
-  final double _minDisplayPanel = 550;
+  final double addDialogWidth = 500;
+  final double _minDisplayPanel = 600;
   final double _minPortaitHeight = 650;
   final double _leftPanelProportion = 0.4;
   final double _minWindowHeight = 430;
   Image logo = NetworkImageConstants.getLogoDinoImage(
       width: double.infinity, height: 200);
   final double _titleListSpacing = 20;
+  bool isDbTitle = true;
+
   @override
   void initState() {
     _deckController = DeckController(user: widget.user);
@@ -45,6 +48,8 @@ class _DecksScreenState extends State<DecksScreen> {
       });
     }
   }
+
+  /* UI */
 
   @override
   Widget build(BuildContext context) {
@@ -213,31 +218,61 @@ class _DecksScreenState extends State<DecksScreen> {
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: const Text('Tap to view cards'),
-                        trailing: PopupMenuButton(
-                          itemBuilder: (BuildContext context) =>
-                              <PopupMenuEntry>[
-                            PopupMenuItem(
-                              child: ListTile(
-                                leading: const Icon(Icons.update),
-                                title: const Text('Update'),
-                                onTap: () {
-                                  Navigator.pop(context); // Close the menu
-                                  _updateDeck(decks[index]);
-                                },
+                        trailing: (decks[index].isReversed)
+                            ? PopupMenuButton(
+                                itemBuilder: (BuildContext context) =>
+                                    <PopupMenuEntry>[
+                                      PopupMenuItem(
+                                        child: ListTile(
+                                          leading: const Icon(Icons.delete),
+                                          title: const Text('Delete'),
+                                          onTap: () {
+                                            Navigator.pop(
+                                                context); // Close the menu
+                                            _confirmDeleteDeck(decks[index]);
+                                          },
+                                        ),
+                                      ),
+                                    ])
+                            : PopupMenuButton(
+                                itemBuilder: (BuildContext context) =>
+                                    <PopupMenuEntry>[
+                                  PopupMenuItem(
+                                    child: ListTile(
+                                      leading: const Icon(Icons.update),
+                                      title: const Text('Update'),
+                                      onTap: () {
+                                        Navigator.pop(
+                                            context); // Close the menu
+                                        _updateDeck(decks[index]);
+                                      },
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    child: ListTile(
+                                      leading: const Icon(Icons.swap_horiz),
+                                      title:
+                                          const Text('Generate Reversed Cards'),
+                                      onTap: () {
+                                        Navigator.pop(
+                                            context); // Close the menu
+                                        _generateReversed(decks[index]);
+                                      },
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    child: ListTile(
+                                      leading: const Icon(Icons.delete),
+                                      title: const Text('Delete'),
+                                      onTap: () {
+                                        Navigator.pop(
+                                            context); // Close the menu
+                                        _confirmDeleteDeck(decks[index]);
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            PopupMenuItem(
-                              child: ListTile(
-                                leading: const Icon(Icons.delete),
-                                title: const Text('Delete'),
-                                onTap: () {
-                                  Navigator.pop(context); // Close the menu
-                                  _confirmDeleteDeck(decks[index]);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ),
@@ -249,7 +284,7 @@ class _DecksScreenState extends State<DecksScreen> {
     );
   }
 
-  /* Functional methods */
+  /* Logic functions */
 
   _logout() {
     FirebaseAuth.instance.signOut();
@@ -275,35 +310,60 @@ class _DecksScreenState extends State<DecksScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                const SizedBox(height: 10),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'Name'),
+                  decoration: const InputDecoration(labelText: 'Deck name'),
                   onChanged: (value) {
                     name = value;
                   },
                 ),
+                const SizedBox(height: 10),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'Secret'),
+                  decoration: const InputDecoration(labelText: 'Auth Secret'),
                   onChanged: (value) {
                     secret = value;
                   },
                 ),
+                const SizedBox(height: 10),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'Database ID'),
+                  decoration:
+                      const InputDecoration(labelText: 'Notion Database ID'),
                   onChanged: (value) {
                     dbID = value;
                   },
                 ),
+                const SizedBox(height: 10),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'Key Header'),
+                  decoration:
+                      const InputDecoration(labelText: 'Question header'),
                   onChanged: (value) {
                     keyHeader = value;
                   },
                 ),
+                const SizedBox(height: 10),
                 TextField(
-                  decoration: const InputDecoration(labelText: 'Value Header'),
+                  decoration: const InputDecoration(labelText: 'Answer header'),
                   onChanged: (value) {
                     valueHeader = value;
                   },
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: <Widget>[
+                    StatefulBuilder(
+                      builder: (BuildContext context, StateSetter setState) {
+                        return Checkbox(
+                          value: isDbTitle,
+                          onChanged: (value) {
+                            setState(() {
+                              isDbTitle = value!;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                    const Text('database title is deck title?'),
+                  ],
                 ),
               ],
             ),
@@ -318,7 +378,8 @@ class _DecksScreenState extends State<DecksScreen> {
             TextButton(
               child: const Text('Add'),
               onPressed: () {
-                _createDeck(name, dbID, secret, false, keyHeader, valueHeader);
+                _createDeck(name, dbID, secret, isDbTitle, keyHeader,
+                    valueHeader, isDbTitle);
                 Navigator.of(context).pop();
               },
             ),
@@ -329,25 +390,66 @@ class _DecksScreenState extends State<DecksScreen> {
   }
 
   __showInfoDialog() {
-    DialogManager.show(
-      context,
-      'Info',
-      ' - This is a flashcard app that uses Notion as a database. \n'
-          ' - You can add a deck by providing the name, secret, version, database ID, key header, and value header.  \n'
-          ' - You need a notion integration to be able to fetch data from notion.\n'
-          ' - Deleting a deck here will not delete the notion database.  \n'
-          ' - Click update deck whenever you update the notion database.  \n'
-          ' - Contact dev at amriteshdasgupta@gmail.com.  \n',
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Info'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _buildInfoText(
+                  '- This is a flashcard app that uses Notion as a database.',
+                ),
+                _buildInfoText(
+                  '- You can add a deck by providing the name, secret, version, database ID, key header, and value header.',
+                ),
+                _buildInfoText(
+                  '- You need a notion integration to be able to fetch data from notion.',
+                ),
+                _buildInfoText(
+                  '- Deleting a deck here will not delete the notion database.',
+                ),
+                _buildInfoText(
+                  '- Click update deck whenever you update the notion database.',
+                ),
+                _buildInfoText(
+                  '- Reversed decks cannot be updated or reversed again. If you want to update then you can either delete re-create it or delete, update the original deck and then generate reversed cards again.',
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoText(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        text,
+        style: TextStyles.bodyRegular,
+      ),
     );
   }
 
   _createDeck(String name, String dbID, String secretToken, bool reversible,
-      String keyHeader, String valueHeader) async {
+      String keyHeader, String valueHeader, bool isDbTitle) async {
     Deck? deck = await _deckController.createDeck(
       name: name,
       dbId: dbID,
       secretToken: secretToken,
-      reversible: reversible,
+      isDbTitle: isDbTitle,
       keyHeader: keyHeader,
       valueHeader: valueHeader,
     );
@@ -369,6 +471,17 @@ class _DecksScreenState extends State<DecksScreen> {
     if (updatedDeck != null) {
       setState(() {
         decks[decks.indexWhere((d) => d.did == deck.did)] = updatedDeck;
+      });
+    } else {
+      _showDialogUpdateError();
+    }
+  }
+
+  _generateReversed(Deck deck) async {
+    Deck? reversedDeck = await _deckController.generateReversed(deck);
+    if (reversedDeck != null) {
+      setState(() {
+        decks.add(reversedDeck);
       });
     } else {
       _showDialogUpdateError();

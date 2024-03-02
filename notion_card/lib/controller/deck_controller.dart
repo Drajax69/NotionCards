@@ -19,9 +19,10 @@ class DeckController {
     required String name,
     required String dbId,
     required String secretToken,
-    required bool reversible,
     required String keyHeader,
     required String valueHeader,
+    required bool isDbTitle,
+    bool isReversed = false,
   }) async {
     try {
       log("[deck-controller] Creating deck with name: $name");
@@ -40,7 +41,7 @@ class DeckController {
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
         List<repo.Card>? cards = NotionService.convertResponseBodyToDeckModel(
-            data, name, keyHeader, valueHeader);
+            data, name, keyHeader, valueHeader, isDbTitle, isReversed);
         if (cards == null) {
           return null;
         }
@@ -49,10 +50,11 @@ class DeckController {
           did: IdGenerator.getRandomString(10),
           dbId: dbId,
           secretToken: secretToken,
-          reversible: reversible,
+          isDbTitle: isDbTitle,
           keyHeader: keyHeader,
           valueHeader: valueHeader,
           length: cards.length,
+          isReversed: isReversed,
         );
         deck.createCards(cards);
         user.createDeckRepo(deck);
@@ -74,7 +76,7 @@ class DeckController {
         name: deck.name,
         dbId: deck.dbId,
         secretToken: deck.secretToken,
-        reversible: deck.reversible,
+        isDbTitle: deck.isDbTitle,
         keyHeader: deck.keyHeader,
         valueHeader: deck.valueHeader,
       );
@@ -90,35 +92,15 @@ class DeckController {
     user.deleteDeckRepo(deck);
   }
 
-  // Future<bool> _fetchNotionData(String name, String secret, String version,
-  //     String dbID, String keyHeader, String valueHeader) async {
-  //   try {
-  //     final Map<String, String> headers = {
-  //       'Authorization': 'Bearer $secret',
-  //       'Notion-Version': version,
-  //       'Content-Type': 'application/json',
-  //       'X-REQUESTED-WITH': '*'
-  //     };
-
-  //     CorsProxyService corsGateway =
-  //         CorsProxyService(baseUrl: 'https://api.notion.com/v1/databases/');
-
-  //     final response = await corsGateway.post('$dbID/query', headers);
-
-  //     if (response.statusCode == 200) {
-  //       var data = json.decode(response.body);
-  //       log('Fetched data: $data');
-  //       _createDeck(data, name, dbID, secret, false, keyHeader,
-  //           valueHeader); // Reversibility logic
-  //       return true;
-  //     } else {
-  //       log('Failed to fetch decks: ${response.statusCode}');
-  //       _showDialogError();
-  //     }
-  //   } catch (e) {
-  //     log('Error fetching data: $e');
-  //     _showDialogError();
-  //   }
-  //   return false;
-  // }
+  Future<Deck?> generateReversed(Deck deck) async {
+    Deck? reversedDeck = await createDeck(
+        name: "${deck.name} (reversed)",
+        dbId: deck.dbId,
+        secretToken: deck.secretToken,
+        keyHeader: deck.valueHeader,
+        valueHeader: deck.keyHeader,
+        isDbTitle: deck.isDbTitle,
+        isReversed: true);
+    return reversedDeck;
+  }
 }
