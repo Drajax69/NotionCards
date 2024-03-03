@@ -27,6 +27,7 @@ Link: https://notioncards-23b9e.web.app
   - Users can specify what colour they want their cards to be (9 options).
   - Swipable and can be viewed using any device (i.e phone, tablet, laptop...).
   - Cards in a deck are randomized for a better learning experience.
+  - Hiragana and Katakana can be translated to romaji directly through translator toggle
 
 ## Dependencies
 

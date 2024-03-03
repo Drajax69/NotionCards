@@ -1,6 +1,6 @@
-import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:notion_card/controller/card_controller.dart';
 import 'package:notion_card/utils/constant.dart';
 import 'package:notion_card/repoModels/deck.dart';
 import 'package:notion_card/repoModels/card.dart' as repo;
@@ -20,10 +20,12 @@ class _CardViewState extends State<CardView> {
   bool isLoading = true;
   int currentIndex = 0;
   bool isFlipped = false;
-  final double _toolbarHeight = 60;
+  final double _toolbarHeight = 100;
   final double _minCardWidth = 300;
   late Color cardColor;
   List<Color> colorOptions = Constants.cardColorOptions;
+  bool showHiragana = false;
+  final _controller = CardController();
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _CardViewState extends State<CardView> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+    bool fullView = screenWidth > Constants.phoneWidth;
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     } else if (cards.isEmpty) {
@@ -59,10 +62,18 @@ class _CardViewState extends State<CardView> {
           title: Center(
             child: Text(
               widget.deck.name,
-              style: TextStyles.cardHeaderBlack,
+              style: fullView
+                  ? TextStyles.headerBlack
+                  : TextStyles.cardHeaderPhoneBlack,
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.tips_and_updates),
+              tooltip: "Toggle Hiragana View",
+              onPressed: _toggleHiraganaView,
+              color: showHiragana ? Colors.yellow : Colors.grey,
+            ),
             IconButton(
               icon: const Icon(Icons.color_lens),
               onPressed: _showColorPicker,
@@ -73,7 +84,6 @@ class _CardViewState extends State<CardView> {
           // Swipe gesture detection
           onHorizontalDragEnd: (details) {
             if (details.primaryVelocity! > 0) {
-              // Swiped from left to right
               _showPreviousCard();
             } else if (details.primaryVelocity! < 0) {
               // Swiped from right to left
@@ -127,14 +137,28 @@ class _CardViewState extends State<CardView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Center(
-                        child: Text(
-                          isFlipped
-                              ? cards[index].answer
-                              : cards[index].question,
-                          textAlign: TextAlign.center,
-                          style: TextStyles.cardTextFont,
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            isFlipped
+                                ? cards[index].answer
+                                : cards[index].question,
+                            textAlign: TextAlign.center,
+                            style: TextStyles.cardTextFont,
+                          ),
+                          if (showHiragana)
+                            Text(
+                              isFlipped
+                                  ? _toRomaji(cards[index].answer)
+                                  : _toRomaji(cards[index].question),
+                              textAlign: TextAlign.center,
+                              style: TextStyles.cardTextFont.copyWith(
+                                fontSize: 16, // Adjust as needed
+                                color: Colors.grey, // Adjust color as needed
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     Row(
@@ -201,6 +225,17 @@ class _CardViewState extends State<CardView> {
   }
 
   /* Logic functions */
+
+  _toggleHiraganaView() {
+    setState(() {
+      showHiragana = !showHiragana;
+    });
+  }
+
+  _toRomaji(String hiragana) {
+    String romaji = _controller.japaneseToRomaji(hiragana) ?? '';
+    return romaji;
+  }
 
   void _fetchCards() async {
     cards = await widget.deck.getCards();

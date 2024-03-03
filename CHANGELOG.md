@@ -3,12 +3,18 @@
 Add all changes made into this CHANGELOG.
 
 
+### 1.2.2 (03-03-2024)
+
+---
+
+* Katakana/Hiragana to Romaji converting toggle
+* Top spacing in card view page and improved UI
+
 ### 1.2.1 (03-03-2024)
 
 ---
 
 * Cards are scrollable  - Removed next/previous buttons
-
 * Card colours configurable by user
 
 ### **1.2.0 (28-02-2024)**

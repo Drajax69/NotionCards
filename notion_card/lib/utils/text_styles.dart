@@ -25,6 +25,14 @@ class TextStyles {
     letterSpacing: 1.2,
   );
 
+  static const TextStyle cardHeaderPhoneBlack = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: Colors.black87,
+    fontFamily: 'Poppins',
+    letterSpacing: 1.2,
+  );
+
   static const TextStyle cardTextFont = TextStyle(
     fontSize: 30,
     fontWeight: FontWeight.w400,
@@ -33,7 +41,7 @@ class TextStyles {
     letterSpacing: 1.2,
   );
 
-    static const TextStyle cardIndexingFont = TextStyle(
+  static const TextStyle cardIndexingFont = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w400,
     color: Colors.black87,
