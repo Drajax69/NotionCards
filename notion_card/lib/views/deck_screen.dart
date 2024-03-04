@@ -362,7 +362,7 @@ class _DecksScreenState extends State<DecksScreen> {
                         );
                       },
                     ),
-                    const Text('database title is deck title?'),
+                    const Text('DB title matches deck title?', softWrap: true),
                   ],
                 ),
               ],

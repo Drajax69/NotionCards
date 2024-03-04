@@ -1,7 +1,7 @@
 name: notion_card
 description: "Integrate your notion database with Flashcards"
 publish_to: 'none'
-version: 1.2.2
+version: 1.2.3
 
 environment:
   sdk: '>=3.2.1 <4.0.0'
@@ -12,6 +12,7 @@ dependencies:
   firebase_core: ^2.25.4
   flutter:
     sdk: flutter
+  flutter_tts: ^3.8.5
   http: ^1.2.0
 
 dev_dependencies:

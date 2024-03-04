@@ -5,6 +5,7 @@ import 'package:notion_card/utils/constant.dart';
 import 'package:notion_card/repoModels/deck.dart';
 import 'package:notion_card/repoModels/card.dart' as repo;
 import 'package:notion_card/utils/text_styles.dart';
+import 'package:notion_card/utils/text_to_voice.dart';
 
 class CardView extends StatefulWidget {
   final Deck deck;
@@ -25,7 +26,12 @@ class _CardViewState extends State<CardView> {
   late Color cardColor;
   List<Color> colorOptions = Constants.cardColorOptions;
   bool showHiragana = false;
-  final _controller = CardController();
+  final CardController _controller = CardController();
+  final TextToSpeech _tts = TextToSpeech();
+  final PageController _pageController = PageController(initialPage: 0);
+  final int _transitionDurationMs = 300;
+  final double _bottomPadding = 25;
+  final double _interIconSpacing = 10;
 
   @override
   void initState() {
@@ -69,27 +75,24 @@ class _CardViewState extends State<CardView> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.tips_and_updates),
-              tooltip: "Toggle Hiragana View",
+              icon: Text(
+                showHiragana ? 'あ' : 'abc',
+                style: TextStyles.toggleFont, // Adjust font size as needed
+              ),
+              tooltip:
+                  showHiragana ? "Toggle Hiragana View" : "Toggle ABC View",
               onPressed: _toggleHiraganaView,
               color: showHiragana ? Colors.yellow : Colors.grey,
             ),
+            SizedBox(width: _interIconSpacing),
             IconButton(
               icon: const Icon(Icons.color_lens),
               onPressed: _showColorPicker,
             ),
+            SizedBox(width: _interIconSpacing)
           ],
         ),
         body: GestureDetector(
-          // Swipe gesture detection
-          onHorizontalDragEnd: (details) {
-            if (details.primaryVelocity! > 0) {
-              _showPreviousCard();
-            } else if (details.primaryVelocity! < 0) {
-              // Swiped from right to left
-              _showNextCard();
-            }
-          },
           child: Center(
             child: Container(
               constraints: BoxConstraints(
@@ -98,11 +101,12 @@ class _CardViewState extends State<CardView> {
               ),
               child: PageView.builder(
                 itemCount: cards.length,
-                controller: PageController(initialPage: currentIndex),
+                controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {
                     currentIndex = index;
                     isFlipped = false;
+                    showHiragana = false;
                   });
                 },
                 itemBuilder: (context, index) {
@@ -111,6 +115,31 @@ class _CardViewState extends State<CardView> {
               ),
             ),
           ),
+        ),
+        bottomNavigationBar: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              padding: EdgeInsets.only(bottom: _bottomPadding),
+              onPressed: () {
+                _pageController.previousPage(
+                  duration: Duration(milliseconds: _transitionDurationMs),
+                  curve: Curves.ease,
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_forward),
+              padding: EdgeInsets.only(bottom: _bottomPadding),
+              onPressed: () {
+                _pageController.nextPage(
+                  duration: Duration(milliseconds: _transitionDurationMs),
+                  curve: Curves.ease,
+                );
+              },
+            ),
+          ],
         ),
       );
     }
@@ -155,7 +184,8 @@ class _CardViewState extends State<CardView> {
                               textAlign: TextAlign.center,
                               style: TextStyles.cardTextFont.copyWith(
                                 fontSize: 16, // Adjust as needed
-                                color: Colors.grey, // Adjust color as needed
+                                color: const Color.fromARGB(
+                                    255, 50, 49, 49), // Adjust color as needed
                               ),
                             ),
                         ],
@@ -169,6 +199,16 @@ class _CardViewState extends State<CardView> {
                           style: TextStyles.cardIndexingFont,
                         ),
                         const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.volume_up),
+                          onPressed: () {
+                            _tts.speak(
+                              isFlipped
+                                  ? cards[index].answer
+                                  : cards[index].question,
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ],
@@ -243,40 +283,6 @@ class _CardViewState extends State<CardView> {
     setState(() {
       isLoading = false;
     });
-  }
-
-  void _showNextCard() {
-    if (currentIndex < cards.length - 1) {
-      setState(() {
-        currentIndex++;
-        isFlipped = false;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          showCloseIcon: true,
-          duration: Duration(seconds: 1),
-          content: Text('End of deck'),
-        ),
-      );
-    }
-  }
-
-  void _showPreviousCard() {
-    if (currentIndex > 0) {
-      setState(() {
-        currentIndex--;
-        isFlipped = false;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          showCloseIcon: true,
-          duration: Duration(seconds: 1),
-          content: Text('Start of deck'),
-        ),
-      );
-    }
   }
 
   void _flipCard() {

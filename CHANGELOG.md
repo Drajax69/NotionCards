@@ -1,7 +1,13 @@
-# *Current version: 1.2.1*
+# *Current version: 1.2.3*
 
 Add all changes made into this CHANGELOG.
 
+### 1.2.3 (04-03-2024)
+
+---
+
+* Added speaking feature accomodating to Japanese and English
+* Improved readability on cards
 
 ### 1.2.2 (03-03-2024)
 

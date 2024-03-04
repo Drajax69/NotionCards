@@ -17,6 +17,13 @@ class TextStyles {
     letterSpacing: 1.2,
   );
 
+  static const TextStyle toggleFont = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w500,
+    color: Colors.black87,
+    fontFamily: 'Poppins',
+    letterSpacing: 1.2,
+  );
   static const TextStyle cardHeaderBlack = TextStyle(
     fontSize: 35,
     fontWeight: FontWeight.bold,
