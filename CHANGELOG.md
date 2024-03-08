@@ -1,6 +1,13 @@
-# *Current version: 1.2.3*
+# *Current version: 1.2.4*
 
 Add all changes made into this CHANGELOG.
+
+
+### 1.2.4 (09-03-2024)
+
+---
+
+* Bugfix: Empty rows on database not failing *Add deck* functionality
 
 ### 1.2.3 (04-03-2024)
 

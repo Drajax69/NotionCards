@@ -83,6 +83,7 @@ class Deck {
   }
 
   Future<void> createCards(List<Card> cards) async {
+    if(cards.isEmpty) return;
     try {
       final batch = FirebaseFirestore.instance.batch();
       for (final card in cards) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart' as ui;
 
 class NetworkImageConstants {
-  static const devEnv = true;
+  static const devEnv = false;
 
   static const String loginBackgroundUrl = 'loginbg.png';
 
