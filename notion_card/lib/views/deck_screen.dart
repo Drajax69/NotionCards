@@ -8,9 +8,10 @@ import 'package:notion_card/utils/network_image.dart';
 import 'package:notion_card/utils/text_styles.dart';
 import 'package:notion_card/views/card_screen.dart';
 import 'package:notion_card/widget_templates/dialog.dart';
+import 'package:notion_card/widget_templates/loading_indicator.dart';
 
 class DecksScreen extends StatefulWidget {
-  const DecksScreen({Key? key, required this.user}) : super(key: key);
+  const DecksScreen({super.key, required this.user});
   final model.User user;
 
   @override
@@ -30,6 +31,7 @@ class _DecksScreenState extends State<DecksScreen> {
   final double _minWindowHeight = 430;
   Image logo = NetworkImageConstants.getLogoDinoImage(
       width: double.infinity, height: 200);
+  List<Image> loadingImages = NetworkImageConstants.getLoadingIndicatorImages();
   final double _titleListSpacing = 20;
   bool isDbTitle = true;
 
@@ -37,6 +39,7 @@ class _DecksScreenState extends State<DecksScreen> {
   void initState() {
     _deckController = DeckController(user: widget.user);
     _fetchDecks();
+
     super.initState();
   }
 
@@ -59,10 +62,16 @@ class _DecksScreenState extends State<DecksScreen> {
     bool isPortrait = screenHeight > _minPortaitHeight;
     bool showLogo = screenHeight > _minWindowHeight;
     return Scaffold(
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _buildDeckList(phoneDisplay, isPortrait, showLogo),
-        floatingActionButton: _buildFloatingActionButtons(phoneDisplay));
+      body: _isLoading
+          ? Center(
+              child: LoadingIndicator(
+                images: loadingImages,
+                text: 'Loading...',
+              ),
+            )
+          : _buildDeckList(phoneDisplay, isPortrait, showLogo),
+      floatingActionButton: _buildFloatingActionButtons(phoneDisplay),
+    );
   }
 
   Widget? _buildFloatingActionButtons(bool phoneDisplay) {
@@ -196,7 +205,8 @@ class _DecksScreenState extends State<DecksScreen> {
                   ),
                 ),
                 SizedBox(height: _titleListSpacing),
-                if (decks.isEmpty) const Center(child: Text('No decks found')),
+                if (decks.isEmpty)
+                  const Center(child: Text('Add your first deck!')),
                 for (int index = 0; index < decks.length; index++)
                   GestureDetector(
                     onTap: () {
@@ -445,6 +455,9 @@ class _DecksScreenState extends State<DecksScreen> {
 
   _createDeck(String name, String dbID, String secretToken, bool reversible,
       String keyHeader, String valueHeader, bool isDbTitle) async {
+    setState(() {
+      _isLoading = true;
+    });
     Deck? deck = await _deckController.createDeck(
       name: name,
       dbId: dbID,
@@ -461,16 +474,25 @@ class _DecksScreenState extends State<DecksScreen> {
           decks.insert(0, deck);
         });
       }
+      setState(() {
+        _isLoading = false;
+      });
     } else {
       _showDialogError();
     }
   }
 
   _updateDeck(Deck deck) async {
+    setState(() {
+      _isLoading = true;
+    });
     Deck? updatedDeck = await _deckController.updateDeck(deck);
     if (updatedDeck != null) {
       setState(() {
         decks[decks.indexWhere((d) => d.did == deck.did)] = updatedDeck;
+      });
+      setState(() {
+        _isLoading = false;
       });
     } else {
       _showDialogUpdateError();
@@ -478,10 +500,16 @@ class _DecksScreenState extends State<DecksScreen> {
   }
 
   _generateReversed(Deck deck) async {
+    setState(() {
+      _isLoading = true;
+    });
     Deck? reversedDeck = await _deckController.generateReversed(deck);
     if (reversedDeck != null) {
       setState(() {
         decks.add(reversedDeck);
+      });
+      setState(() {
+        _isLoading = false;
       });
     } else {
       _showDialogUpdateError();

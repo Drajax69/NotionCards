@@ -15,7 +15,7 @@ void main() async {
 }
 
 class NotionCards extends StatelessWidget {
-  const NotionCards({Key? key}) : super(key: key);
+  const NotionCards({super.key});
 
   @override
   Widget build(BuildContext context) {

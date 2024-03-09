@@ -10,7 +10,7 @@ import 'package:notion_card/utils/text_to_voice.dart';
 class CardView extends StatefulWidget {
   final Deck deck;
 
-  const CardView({Key? key, required this.deck}) : super(key: key);
+  const CardView({super.key, required this.deck});
 
   @override
   State<CardView> createState() => _CardViewState();
@@ -158,7 +158,7 @@ class _CardViewState extends State<CardView> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 0),
               child: Container(
                 key: ValueKey<int>(isFlipped ? 1 : 0),
                 padding: const EdgeInsets.all(20),

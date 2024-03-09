@@ -3,6 +3,14 @@
 Add all changes made into this CHANGELOG.
 
 
+### 1.2.5 (10-03-2024)
+
+---
+
+* Bugfix: Changing card now does not have delay to swap back to question
+* Can have over 100 cards in a deck
+* Custom loading screen template created - not in use as waiting frame images
+
 ### 1.2.4 (09-03-2024)
 
 ---

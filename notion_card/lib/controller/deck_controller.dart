@@ -32,37 +32,51 @@ class DeckController {
         'Content-Type': 'application/json',
         'X-REQUESTED-WITH': '*'
       };
-
+      final Map<String, String> params = {};
+      int pageCounter = 0;
+      bool hasMore = true;
       CorsProxyService corsProxyService =
           CorsProxyService(baseUrl: 'https://api.notion.com/v1/databases/');
+      List<repo.Card>? cards = [];
 
-      final response = await corsProxyService.post('$dbId/query', headers);
-
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        List<repo.Card>? cards = NotionService.convertResponseBodyToDeckModel(
-            data, name, keyHeader, valueHeader, isDbTitle, isReversed);
-        if (cards == null) {
+      while (hasMore) {
+        final response =
+            await corsProxyService.post('$dbId/query', headers, params);
+        if (response.statusCode == 200) {
+          var data = json.decode(response.body);
+          List<repo.Card>? cardPage =
+              NotionService.convertResponseBodyToDeckModel(
+                  data, name, keyHeader, valueHeader, isDbTitle, isReversed);
+          if (cardPage == null) {
+            return null;
+          }
+          cards.addAll(cardPage);
+          hasMore = data['has_more'];
+          if (hasMore) {
+            params['start_cursor'] = data['next_cursor'];
+          }
+          pageCounter++;
+          log("[deck-controller] Retrieved page $pageCounter");
+        } else {
+          log('Failed to create deck: ${response.statusCode} for page $pageCounter');
           return null;
         }
-        Deck deck = Deck(
-          name: name,
-          did: IdGenerator.getRandomString(10),
-          dbId: dbId,
-          secretToken: secretToken,
-          isDbTitle: isDbTitle,
-          keyHeader: keyHeader,
-          valueHeader: valueHeader,
-          length: cards.length,
-          isReversed: isReversed,
-        );
-        deck.createCards(cards);
-        user.createDeckRepo(deck);
-        return deck;
-      } else {
-        log('Failed to create deck: ${response.statusCode}');
-        return null;
       }
+
+      Deck deck = Deck(
+        name: name,
+        did: IdGenerator.getRandomString(10),
+        dbId: dbId,
+        secretToken: secretToken,
+        isDbTitle: isDbTitle,
+        keyHeader: keyHeader,
+        valueHeader: valueHeader,
+        length: cards.length,
+        isReversed: isReversed,
+      );
+      deck.createCards(cards);
+      user.createDeckRepo(deck);
+      return deck;
     } catch (e) {
       log('Error creating deck: $e');
       return null;
