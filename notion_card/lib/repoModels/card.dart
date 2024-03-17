@@ -1,14 +1,24 @@
+import 'dart:developer';
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:notion_card/utils/constant.dart';
 
 class Card {
   final String cid; // Card ID
-  final String question;
-  final String answer;
+  String question;
+  String answer;
+  int repetitionNumber;
+  double easinessFactor;
+  Timestamp nextReview;
 
   Card({
     required this.cid,
     required this.question,
     required this.answer,
+    required this.easinessFactor,
+    required this.nextReview,
+    required this.repetitionNumber,
   });
 
   Map<String, dynamic> toMap() {
@@ -16,6 +26,9 @@ class Card {
       'cid': cid,
       'question': question,
       'answer': answer,
+      'repetitionNumber': repetitionNumber,
+      'easinessFactor': easinessFactor,
+      'nextReview': nextReview,
     };
   }
 
@@ -24,6 +37,9 @@ class Card {
       cid: map['cid'] ?? '',
       question: map['question'] ?? '',
       answer: map['answer'] ?? '',
+      repetitionNumber: map['repetitionNumber'] ?? 1,
+      easinessFactor: map['easinessFactor'] ?? 2.5,
+      nextReview: map['nextReview'] ?? Constants.defaultNextReview,
     );
   }
 
@@ -33,6 +49,73 @@ class Card {
       cid: data['cid'] ?? '',
       question: data['question'] ?? '',
       answer: data['answer'] ?? '',
+      easinessFactor: data['easinessFactor'] ?? 2.5,
+      nextReview: data['nextReview'] ?? Constants.defaultNextReview,
+      repetitionNumber: data['repetitionNumber'] ?? 1,
     );
+  }
+
+  void applySRAlgirthm(String uid, String did, int confidenceLevel) async {
+    const int correctThreshold = 3;
+    const Duration initialInterval = Duration(days: 1);
+    const Duration correctIntervalMultiplier = Duration(days: 6);
+    const int maxIntervalFromReview = 20;
+    if (confidenceLevel >= correctThreshold) {
+      if (repetitionNumber == 0) {
+        nextReview = Timestamp.fromDate(DateTime.now().add(initialInterval));
+      } else if (repetitionNumber == 1) {
+        nextReview =
+            Timestamp.fromDate(DateTime.now().add(correctIntervalMultiplier));
+      } else {
+        nextReview = Timestamp.fromDate(DateTime.now().add(Duration(
+            days: math.min(
+                maxIntervalFromReview,
+                ((nextReview.toDate().difference(DateTime.now()).inDays *
+                        easinessFactor)
+                    .toInt())))));
+      }
+      repetitionNumber++;
+    } else {
+      repetitionNumber = 0;
+      nextReview = Timestamp.fromDate(
+          DateTime.now().add(initialInterval)); // Reset interval
+    }
+    // Should be old easiness factor + new user grade
+    easinessFactor = math.max(
+        1.3,
+        easinessFactor +
+            (0.1 -
+                (5 - confidenceLevel) * (0.08 + (5 - confidenceLevel) * 0.02)));
+
+    // Update the card in the database
+    await update(uid, did);
+  }
+
+  Future<void> update(String uid, String did) async {
+    try {
+      log("[updating-card] $question");
+      await FirebaseFirestore.instance
+          .collection('decks')
+          .doc(did)
+          .collection('cards')
+          .doc(cid)
+          .update(toMap());
+    } catch (e) {
+      throw Exception('[ERR! card-update]: $e');
+    }
+  }
+
+  @override
+  String toString() {
+    // return 'Card{cid: $cid, question: $question, answer: $answer, repetitionNumber: $repetitionNumber, easinessFactor: $easinessFactor, nextReview: ${nextReview.toDate()}\n';
+    return question;
+  }
+
+  @override
+  // ignore: hash_and_equals
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Card && other.cid == cid;
   }
 }

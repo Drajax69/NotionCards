@@ -7,7 +7,7 @@ class Deck {
   final String name;
   final String did; // Deck ID
   final String dbId; // Database ID
-  final int length;
+  int length;
   final String secretToken;
   final bool isDbTitle;
   final bool isReversed;
@@ -82,21 +82,33 @@ class Deck {
     }
   }
 
-  Future<void> createCards(List<Card> cards) async {
-    if(cards.isEmpty) return;
+  Future<void> updateLength(String uid) async {
     try {
-      final batch = FirebaseFirestore.instance.batch();
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('decks')
+          .doc(did)
+          .update({'length': length});
+    } catch (e) {
+      log('[ERR! update-length]: $e');
+    }
+  }
+
+  Future<void> createCards(List<Card> cards) async {
+    if (cards.isEmpty) return;
+    try {
       for (final card in cards) {
+        // log("creating card: ${card.question}");
         final cardRef = FirebaseFirestore.instance
             .collection('decks')
             .doc(did)
             .collection('cards')
             .doc(card.cid);
-        batch.set(cardRef, card.toMap());
+        await cardRef.set(card.toMap());
       }
-      await batch.commit();
     } catch (e) {
-      log('Error creating cards: $e');
+      log('[ERR! create-cards]: $e');
     }
   }
 
@@ -113,16 +125,34 @@ class Deck {
     }
   }
 
+  Future<void> deleteAllCards() async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('decks')
+          .doc(did)
+          .collection('cards')
+          .get()
+          .then((snapshot) {
+        for (DocumentSnapshot doc in snapshot.docs) {
+          doc.reference.delete();
+        }
+      });
+    } catch (e) {
+      log('Error deleting cards: $e');
+    }
+  }
+
   Future<List<Card>> getCards() async {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('decks')
           .doc(did)
           .collection('cards')
+          .orderBy('nextReview')
           .get();
       return snapshot.docs.map((e) => Card.fromDocumentSnapshot(e)).toList();
     } catch (e) {
-      log('Error getting cards: $e');
+      log('[ERR! get-cards]s: $e');
       return [];
     }
   }

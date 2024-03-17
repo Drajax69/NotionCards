@@ -1,7 +1,15 @@
-# *Current version: 1.2.4*
+# *Current version: 1.3.0*
 
-Add all changes made into this CHANGELOG.
+Record all changes made into this CHANGELOG.
 
+### 1.3.0 (17-03-2024)
+
+---
+
+* Updating cards algorithm changed to retain pre-existing card information for unchanged cards
+* Updating does not block app - blocks deck instead till finished
+* Spaced repetition algorithm implemented as a variation of SM2 algorithm - to be finetuned and tested further
+* Difficulty selector created to reflect confidence level
 
 ### 1.2.5 (10-03-2024)
 

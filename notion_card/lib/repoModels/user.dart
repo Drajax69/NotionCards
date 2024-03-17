@@ -7,9 +7,9 @@ class User {
   final Timestamp creationTimestamp;
   final String name;
 
-  User( {required this.name,
+  User({
+    required this.name,
     required this.uid,
-    
     required this.creationTimestamp,
   });
 
@@ -105,6 +105,24 @@ class User {
     } catch (e) {
       log('Error getting decks: $e');
       return [];
+    }
+  }
+
+  Future<Deck?> getDeck(String did) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('decks')
+          .doc(did)
+          .get();
+      if (snapshot.exists) {
+        return Deck.fromDocumentSnapshot(snapshot);
+      }
+      return null; 
+    } catch (e) {
+      log('Error getting deck: $e');
+      return null; // Return null if any error occurs
     }
   }
 

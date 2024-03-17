@@ -1,7 +1,7 @@
 # Notion Card Flutter App
 
 This Flutter app allows users to create flashcard decks from Notion databases and study them.
-Link: https://notioncards-23b9e.web.app 
+Link: https://notioncards-23b9e.web.app
 
 ## Features
 
@@ -12,6 +12,7 @@ Link: https://notioncards-23b9e.web.app
 - **Card View**: Users can view individual flashcards within a deck, with the ability to flip between question and answer.
 - **Next and Previous Cards**: Users can navigate between cards using the Next and Previous buttons.
 - **Delete Deck**: Users can delete decks by confirming their action through a dialog.
+- **Spaced Repeititon:** Uses spaced repetition when a  confidence level is given to the cards.
 
 ## Dependencies
 

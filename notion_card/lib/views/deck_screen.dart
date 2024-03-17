@@ -21,6 +21,7 @@ class DecksScreen extends StatefulWidget {
 class _DecksScreenState extends State<DecksScreen> {
   List<Deck> decks = [];
   bool _isLoading = true;
+  List<Deck> decksLoading = [];
   final String defaultVersion = "2022-06-28";
   late DeckController _deckController;
   final double topSpacing = 50;
@@ -34,6 +35,7 @@ class _DecksScreenState extends State<DecksScreen> {
   List<Image> loadingImages = NetworkImageConstants.getLoadingIndicatorImages();
   final double _titleListSpacing = 20;
   bool isDbTitle = true;
+  bool hamburgerMenuOpen = false;
 
   @override
   void initState() {
@@ -70,7 +72,6 @@ class _DecksScreenState extends State<DecksScreen> {
               ),
             )
           : _buildDeckList(phoneDisplay, isPortrait, showLogo),
-      floatingActionButton: _buildFloatingActionButtons(phoneDisplay),
     );
   }
 
@@ -82,18 +83,42 @@ class _DecksScreenState extends State<DecksScreen> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         FloatingActionButton(
-          onPressed: _logout,
-          child: const Icon(Icons.logout),
+          mini: true,
+          onPressed: () {
+            setState(() {
+              hamburgerMenuOpen = !hamburgerMenuOpen;
+            });
+          },
+          child: Icon(hamburgerMenuOpen ? Icons.close : Icons.menu),
         ),
-        const SizedBox(height: 16),
-        FloatingActionButton(
-          onPressed: __showInfoDialog,
-          child: const Icon(Icons.info),
-        ),
-        const SizedBox(height: 16),
-        FloatingActionButton(
-          onPressed: _showAddDeckDialog,
-          child: const Icon(Icons.add),
+        const SizedBox(height: 16.0),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 0),
+          height: hamburgerMenuOpen ? 192.0 : 0.0,
+          child: Column(
+            children: [
+              FloatingActionButton(
+                mini: true,
+                heroTag: 'logout',
+                onPressed: _logout,
+                child: const Icon(Icons.logout),
+              ),
+              const SizedBox(height: 16),
+              FloatingActionButton(
+                mini: true,
+                heroTag: 'info',
+                onPressed: __showInfoDialog,
+                child: const Icon(Icons.info),
+              ),
+              const SizedBox(height: 16),
+              FloatingActionButton(
+                mini: true,
+                heroTag: 'add',
+                onPressed: _showAddDeckDialog,
+                child: const Icon(Icons.add),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -196,26 +221,39 @@ class _DecksScreenState extends State<DecksScreen> {
               children: [
                 SizedBox(height: topSpacing),
                 Center(
-                  // padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    phoneDisplay || !showLogo
-                        ? '${widget.user.name.split(' ').first}\'s Decks'
-                        : 'Your Decks',
-                    style: TextStyles.headerBlack,
-                  ),
-                ),
+                    child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Spacer(),
+                              Text(
+                                phoneDisplay || !showLogo
+                                    ? '${widget.user.name.split(' ').first}\'s Decks'
+                                    : 'Your Decks',
+                                style: TextStyles.headerBlack,
+                              ),
+                              const Spacer(),
+                              _buildFloatingActionButtons(phoneDisplay) ??
+                                  const SizedBox(),
+                            ]))),
                 SizedBox(height: _titleListSpacing),
                 if (decks.isEmpty)
                   const Center(child: Text('Add your first deck!')),
                 for (int index = 0; index < decks.length; index++)
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CardView(deck: decks[index]),
-                        ),
-                      );
+                      decksLoading.contains(decks[index])
+                          ? _showUpdateLoadingDialog()
+                          : Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CardView(
+                                  deck: decks[index],
+                                  user: widget.user,
+                                ),
+                              ),
+                            );
                     },
                     child: Card(
                       elevation: 3,
@@ -228,10 +266,51 @@ class _DecksScreenState extends State<DecksScreen> {
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: const Text('Tap to view cards'),
-                        trailing: (decks[index].isReversed)
-                            ? PopupMenuButton(
-                                itemBuilder: (BuildContext context) =>
-                                    <PopupMenuEntry>[
+                        trailing: decksLoading.contains(decks[index])
+                            ? const Text("loading...")
+                            : (decks[index].isReversed)
+                                ? PopupMenuButton(
+                                    itemBuilder: (BuildContext context) =>
+                                        <PopupMenuEntry>[
+                                          PopupMenuItem(
+                                            child: ListTile(
+                                              leading: const Icon(Icons.delete),
+                                              title: const Text('Delete'),
+                                              onTap: () {
+                                                Navigator.pop(
+                                                    context); // Close the menu
+                                                _confirmDeleteDeck(
+                                                    decks[index]);
+                                              },
+                                            ),
+                                          ),
+                                        ])
+                                : PopupMenuButton(
+                                    itemBuilder: (BuildContext context) =>
+                                        <PopupMenuEntry>[
+                                      PopupMenuItem(
+                                        child: ListTile(
+                                          leading: const Icon(Icons.update),
+                                          title: const Text('Update'),
+                                          onTap: () {
+                                            Navigator.pop(
+                                                context); // Close the menu
+                                            _updateDeck(decks[index]);
+                                          },
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        child: ListTile(
+                                          leading: const Icon(Icons.swap_horiz),
+                                          title: const Text(
+                                              'Generate Reversed Cards'),
+                                          onTap: () {
+                                            Navigator.pop(
+                                                context); // Close the menu
+                                            _generateReversed(decks[index]);
+                                          },
+                                        ),
+                                      ),
                                       PopupMenuItem(
                                         child: ListTile(
                                           leading: const Icon(Icons.delete),
@@ -243,46 +322,8 @@ class _DecksScreenState extends State<DecksScreen> {
                                           },
                                         ),
                                       ),
-                                    ])
-                            : PopupMenuButton(
-                                itemBuilder: (BuildContext context) =>
-                                    <PopupMenuEntry>[
-                                  PopupMenuItem(
-                                    child: ListTile(
-                                      leading: const Icon(Icons.update),
-                                      title: const Text('Update'),
-                                      onTap: () {
-                                        Navigator.pop(
-                                            context); // Close the menu
-                                        _updateDeck(decks[index]);
-                                      },
-                                    ),
+                                    ],
                                   ),
-                                  PopupMenuItem(
-                                    child: ListTile(
-                                      leading: const Icon(Icons.swap_horiz),
-                                      title:
-                                          const Text('Generate Reversed Cards'),
-                                      onTap: () {
-                                        Navigator.pop(
-                                            context); // Close the menu
-                                        _generateReversed(decks[index]);
-                                      },
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    child: ListTile(
-                                      leading: const Icon(Icons.delete),
-                                      title: const Text('Delete'),
-                                      onTap: () {
-                                        Navigator.pop(
-                                            context); // Close the menu
-                                        _confirmDeleteDeck(decks[index]);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
                       ),
                     ),
                   ),
@@ -484,19 +525,19 @@ class _DecksScreenState extends State<DecksScreen> {
 
   _updateDeck(Deck deck) async {
     setState(() {
-      _isLoading = true;
+      decksLoading.add(deck);
     });
     Deck? updatedDeck = await _deckController.updateDeck(deck);
     if (updatedDeck != null) {
       setState(() {
         decks[decks.indexWhere((d) => d.did == deck.did)] = updatedDeck;
       });
-      setState(() {
-        _isLoading = false;
-      });
     } else {
       _showDialogUpdateError();
     }
+    setState(() {
+      decksLoading.removeWhere((d) => d.did == deck.did);
+    });
   }
 
   _generateReversed(Deck deck) async {
@@ -532,6 +573,11 @@ class _DecksScreenState extends State<DecksScreen> {
 
   _showDialogUpdateError() {
     DialogManager.show(context, 'Error', 'Failed to update deck. Try again.');
+  }
+
+  _showUpdateLoadingDialog() {
+    DialogManager.show(context, 'Please wait',
+        'This deck is loading. Please do not exit app or refresh the page.');
   }
 
   Future<void> _confirmDeleteDeck(Deck deck) async {

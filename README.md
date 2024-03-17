@@ -1,6 +1,6 @@
 # Notion Card Flutter App
 
-Latest version: 1.2.5
+Latest version: 1.3.0
 
 This Flutter app allows users to create flashcard decks from Notion databases and study them.
 Link: https://notioncards-23b9e.web.app
@@ -28,6 +28,7 @@ Link: https://notioncards-23b9e.web.app
   - Swipable and can be viewed using any device (i.e phone, tablet, laptop...).
   - Cards in a deck are randomized for a better learning experience.
   - Hiragana and Katakana can be translated to romaji directly through translator toggle
+  - Users can fill out their confidence level for each card to apply *Spaced Repetition* to their learning
 
 ## Dependencies
 
