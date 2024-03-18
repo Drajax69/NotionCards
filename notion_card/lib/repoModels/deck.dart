@@ -141,7 +141,7 @@ class Deck {
           batch.set(cardRef, card.toMap());
         }
         await batch.commit();
-        index += 20;
+        index += batchSize;
       }
     } catch (e) {
       log('[ERR! create-cards]: $e');

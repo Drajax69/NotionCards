@@ -1,7 +1,14 @@
-# *Current version: 1.3.0*
+# *Current version: 1.3.2*
 
 Record all changes made into this CHANGELOG.
 
+### 1.3.2 (18-03-2024)
+
+---
+
+* Bugfixes
+  * Retain reversed (was overriding original before)
+  * Correct number of cards created (batch size mismatch)
 
 ### 1.3.1 (18-03-2024)
 

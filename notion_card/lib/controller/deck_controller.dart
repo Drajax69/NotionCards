@@ -124,12 +124,12 @@ class DeckController {
     }
     Deck reversedDeck = deck.copyWith(
       name: "${deck.name} (reversed)",
-      dbId: IdGenerator.getRandomString(10),
+      did: IdGenerator.getRandomString(10),
       isReversed: true,
       keyHeader: deck.valueHeader,
       valueHeader: deck.keyHeader,
     );
-    await deck.createCards(cards);
+    await reversedDeck.createCards(cards);
     await user.createDeckRepo(reversedDeck);
     return reversedDeck;
   }

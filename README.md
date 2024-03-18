@@ -1,8 +1,7 @@
 # Notion Card Flutter App
 
-Latest version: 1.3.1
+Latest version: 1.3.2This Flutter app allows users to create flashcard decks from Notion databases and study them.
 
-This Flutter app allows users to create flashcard decks from Notion databases and study them.
 Link: https://notioncards-23b9e.web.app
 
 **Requirements from Notion**
