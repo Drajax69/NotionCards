@@ -2,6 +2,15 @@
 
 Record all changes made into this CHANGELOG.
 
+
+### 1.3.1 (18-03-2024)
+
+---
+
+* Enhancement: Reduced loading times for card creation and updates
+* Bugfix: Generate reversed cards now does not return empty
+* Expertise percentage for decks created
+
 ### 1.3.0 (17-03-2024)
 
 ---

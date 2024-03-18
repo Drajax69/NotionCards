@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:notion_card/controller/deck_controller.dart';
@@ -22,6 +24,7 @@ class _DecksScreenState extends State<DecksScreen> {
   List<Deck> decks = [];
   bool _isLoading = true;
   List<Deck> decksLoading = [];
+  List<double> deckExpertise = [];
   final String defaultVersion = "2022-06-28";
   late DeckController _deckController;
   final double topSpacing = 50;
@@ -36,10 +39,22 @@ class _DecksScreenState extends State<DecksScreen> {
   final double _titleListSpacing = 20;
   bool isDbTitle = true;
   bool hamburgerMenuOpen = false;
+  Deck sampleDeck = Deck(
+    name: 'Sample Deck',
+    did: 'deck123',
+    dbId: 'db456',
+    length: 0,
+    secretToken: 'token789',
+    isDbTitle: true,
+    isReversed: false,
+    keyHeader: 'Term',
+    valueHeader: 'Definition',
+  );
 
   @override
   void initState() {
     _deckController = DeckController(user: widget.user);
+    decksLoading.add(sampleDeck);
     _fetchDecks();
 
     super.initState();
@@ -47,6 +62,8 @@ class _DecksScreenState extends State<DecksScreen> {
 
   _fetchDecks() async {
     decks = await widget.user.getDecks();
+    deckExpertise =
+        await Future.wait(decks.map((deck) async => await deck.getExpertise()));
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -251,6 +268,7 @@ class _DecksScreenState extends State<DecksScreen> {
                                 builder: (context) => CardView(
                                   deck: decks[index],
                                   user: widget.user,
+                                  callback: _callback,
                                 ),
                               ),
                             );
@@ -265,7 +283,8 @@ class _DecksScreenState extends State<DecksScreen> {
                           style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        subtitle: const Text('Tap to view cards'),
+                        subtitle: Text(
+                            'Expertise: ${deckExpertise[index].toStringAsFixed(1)}%'),
                         trailing: decksLoading.contains(decks[index])
                             ? const Text("loading...")
                             : (decks[index].isReversed)
@@ -494,11 +513,24 @@ class _DecksScreenState extends State<DecksScreen> {
     );
   }
 
+  _callback(Deck deck) async {
+    double expertise = await deck.getExpertise();
+    if (mounted) {
+      setState(() {
+        deckExpertise[decks.indexWhere((d) => d.did == deck.did)] = expertise;
+      });
+    }
+  }
+
   _createDeck(String name, String dbID, String secretToken, bool reversible,
       String keyHeader, String valueHeader, bool isDbTitle) async {
     setState(() {
-      _isLoading = true;
+      Deck sampleCopy = sampleDeck.copyWith(name: name);
+      deckExpertise.insert(0, 0.0);
+      decks.insert(0, sampleCopy);
+      decksLoading.add(sampleCopy);
     });
+    log("[deck-controller] Creating deck with name: $name");
     Deck? deck = await _deckController.createDeck(
       name: name,
       dbId: dbID,
@@ -510,14 +542,20 @@ class _DecksScreenState extends State<DecksScreen> {
 
     if (deck != null) {
       widget.user.createDeckRepo(deck);
+      double expertise = await deck.getExpertise();
       if (mounted) {
         setState(() {
+          decks.removeWhere(
+              (d) => d.did == sampleDeck.did); // remove placeholder deck
+          deckExpertise.removeAt(0);
+          deckExpertise.insert(0, expertise);
           decks.insert(0, deck);
         });
       }
       setState(() {
-        _isLoading = false;
+        decksLoading.remove(sampleDeck);
       });
+      log("[deck-controller] Finished deck with name: $name");
     } else {
       _showDialogError();
     }
@@ -542,15 +580,18 @@ class _DecksScreenState extends State<DecksScreen> {
 
   _generateReversed(Deck deck) async {
     setState(() {
-      _isLoading = true;
+      decksLoading.add(deck);
     });
     Deck? reversedDeck = await _deckController.generateReversed(deck);
+    double expertise = await reversedDeck?.getExpertise() ?? 0.0;
+
     if (reversedDeck != null) {
       setState(() {
+        deckExpertise.add(expertise);
         decks.add(reversedDeck);
       });
       setState(() {
-        _isLoading = false;
+        decksLoading.removeWhere((d) => d.did == deck.did);
       });
     } else {
       _showDialogUpdateError();

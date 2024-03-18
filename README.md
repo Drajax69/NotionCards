@@ -1,6 +1,6 @@
 # Notion Card Flutter App
 
-Latest version: 1.3.0
+Latest version: 1.3.1
 
 This Flutter app allows users to create flashcard decks from Notion databases and study them.
 Link: https://notioncards-23b9e.web.app
@@ -22,6 +22,7 @@ Link: https://notioncards-23b9e.web.app
   - Users can create a reversed deck where all the questions and answers are swapped
   - Users can update their decks at any time
   - Users can delete decks without affecting Notion database
+  - Expertise on decks - Using weighted calculations on repetitions, easiness, confidence, etc.
 - **Card View**: Users can view individual flashcards within a deck, with the ability to flip between question and answer.
 
   - Users can specify what colour they want their cards to be (9 options).
@@ -36,6 +37,7 @@ Link: https://notioncards-23b9e.web.app
 - `firebase_auth`: For user authentication with Firebase.
 - `firebase_core`: For initializing Firebase.
 - `http`: For making HTTP requests to the Notion API.
+- `tts`: Text-to-Speech for Pronunciation practice
 
 ## Setup
 
@@ -43,15 +45,8 @@ Link: https://notioncards-23b9e.web.app
 2. Make sure you have Flutter installed on your machine.
 3. Run `flutter pub get` to install dependencies.
 4. Set up Firebase Authentication and update `firebase_options.dart` with your Firebase project configuration.
-5. Set *devEnv* NetworkImageConstants to true
+5. Set *devEnv* NetworkImageConstants to **true**
 6. Run the app using `flutter run`.
-
-## Usage
-
-- Log in with your Firebase account.
-- View existing decks on the Decks Screen.
-- Add new decks by providing the necessary details.
-- Navigate through flashcards within a deck using Next and Previous buttons.
 
 ## Contributing
 

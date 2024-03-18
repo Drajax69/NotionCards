@@ -37,8 +37,8 @@ class Card {
       cid: map['cid'] ?? '',
       question: map['question'] ?? '',
       answer: map['answer'] ?? '',
-      repetitionNumber: map['repetitionNumber'] ?? 1,
-      easinessFactor: map['easinessFactor'] ?? 2.5,
+      repetitionNumber: map['repetitionNumber'] ?? Constants.defaultRepetitionNumber,
+      easinessFactor: map['easinessFactor'] ?? Constants.defaultEasinessFactor,
       nextReview: map['nextReview'] ?? Constants.defaultNextReview,
     );
   }
@@ -49,9 +49,9 @@ class Card {
       cid: data['cid'] ?? '',
       question: data['question'] ?? '',
       answer: data['answer'] ?? '',
-      easinessFactor: data['easinessFactor'] ?? 2.5,
+      easinessFactor: data['easinessFactor'] ?? Constants.defaultEasinessFactor,
       nextReview: data['nextReview'] ?? Constants.defaultNextReview,
-      repetitionNumber: data['repetitionNumber'] ?? 1,
+      repetitionNumber: data['repetitionNumber'] ?? Constants.defaultRepetitionNumber,
     );
   }
 
@@ -75,17 +75,22 @@ class Card {
                     .toInt())))));
       }
       repetitionNumber++;
+      if(repetitionNumber>Constants.maxRepetitionNumber){
+        repetitionNumber = Constants.maxRepetitionNumber;
+      }
     } else {
       repetitionNumber = 0;
       nextReview = Timestamp.fromDate(
           DateTime.now().add(initialInterval)); // Reset interval
     }
     // Should be old easiness factor + new user grade
-    easinessFactor = math.max(
-        1.3,
+    easinessFactor = 
         easinessFactor +
-            (0.1 -
-                (5 - confidenceLevel) * (0.08 + (5 - confidenceLevel) * 0.02)));
+            (0.1 - (5 - confidenceLevel) * (0.08 + (5 - confidenceLevel) * 0.02));
+    easinessFactor = easinessFactor < 1.3 ? 1.3 : easinessFactor;
+    easinessFactor = easinessFactor > Constants.maxEasinessFactor
+        ? Constants.maxEasinessFactor
+        : easinessFactor;
 
     // Update the card in the database
     await update(uid, did);
@@ -103,6 +108,11 @@ class Card {
     } catch (e) {
       throw Exception('[ERR! card-update]: $e');
     }
+  }
+  flipQuestionAnswer() {
+    String temp = question;
+    question = answer;
+    answer = temp;
   }
 
   @override

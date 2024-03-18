@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:notion_card/utils/constant.dart';
 import 'card.dart'; // Import your Card class
 
 class Deck {
@@ -69,6 +70,30 @@ class Deck {
     );
   }
 
+  Deck copyWith({
+    String? name,
+    String? did,
+    String? dbId,
+    int? length,
+    String? secretToken,
+    bool? isDbTitle,
+    bool? isReversed,
+    String? keyHeader,
+    String? valueHeader,
+  }) {
+    return Deck(
+      name: name ?? this.name,
+      did: did ?? this.did,
+      dbId: dbId ?? this.dbId,
+      length: length ?? this.length,
+      secretToken: secretToken ?? this.secretToken,
+      isDbTitle: isDbTitle ?? this.isDbTitle,
+      isReversed: isReversed ?? this.isReversed,
+      keyHeader: keyHeader ?? this.keyHeader,
+      valueHeader: valueHeader ?? this.valueHeader,
+    );
+  }
+
   Future<void> createCard(Card card) async {
     try {
       await FirebaseFirestore.instance
@@ -96,16 +121,27 @@ class Deck {
   }
 
   Future<void> createCards(List<Card> cards) async {
+    // Batching using 10 cards at a time to speed process
+    int batchSize = 10;
     if (cards.isEmpty) return;
     try {
-      for (final card in cards) {
-        // log("creating card: ${card.question}");
-        final cardRef = FirebaseFirestore.instance
-            .collection('decks')
-            .doc(did)
-            .collection('cards')
-            .doc(card.cid);
-        await cardRef.set(card.toMap());
+      int index = 0;
+      while (index < cards.length) {
+        final batch = FirebaseFirestore.instance.batch();
+        final endIndex = (index + batchSize < cards.length)
+            ? index + batchSize
+            : cards.length;
+        for (int i = index; i < endIndex; i++) {
+          final card = cards[i];
+          final cardRef = FirebaseFirestore.instance
+              .collection('decks')
+              .doc(did)
+              .collection('cards')
+              .doc(card.cid);
+          batch.set(cardRef, card.toMap());
+        }
+        await batch.commit();
+        index += 20;
       }
     } catch (e) {
       log('[ERR! create-cards]: $e');
@@ -155,5 +191,39 @@ class Deck {
       log('[ERR! get-cards]s: $e');
       return [];
     }
+  }
+
+  Future<double> getExpertise() async {
+    /* 
+    We treat expertise on a card as a function of repititions and easiness factor 
+    */
+    double total = 0;
+    try {
+      log('[get-expertise]: Getting cards');
+      List<Card> cards = await getCards();
+      if (cards.isEmpty) return 0.0;
+
+      for (Card card in cards) {
+        total +=
+            calculateProficiency(card.easinessFactor, card.repetitionNumber);
+      }
+      return total / cards.length;
+    } catch (e) {
+      log('[ERR! get-expertise]: $e');
+      return 0.0;
+    }
+  }
+
+  double calculateProficiency(double easinessFactor, int repetitionNumber) {
+    /* Calculating proficiency with params:
+   * EF weight: 0.25
+   * Rep weight: 0.75
+   * I have chosen these weights as I believe repetition is a much strong indicator of proficiency
+   */
+    double normalizedEF = easinessFactor / Constants.maxEasinessFactor;
+    double normalizedRep = repetitionNumber / Constants.maxRepetitionNumber;
+    double proficiencyScore = (0.25 * normalizedEF) + (0.75 * normalizedRep);
+    double scaledProficiency = proficiencyScore * 100.0;
+    return scaledProficiency.clamp(0.0, 100.0);
   }
 }

@@ -94,6 +94,7 @@ class DeckController {
       log("[update-deck] Recreating original cards");
 
       await deck.createCards(originalCards);
+      await user.createDeckRepo(deck);
       await deck.updateLength(user.uid);
       log("[update-deck] Finished update");
 
@@ -111,14 +112,25 @@ class DeckController {
   }
 
   Future<Deck?> generateReversed(Deck deck) async {
-    Deck? reversedDeck = await createDeck(
-        name: "${deck.name} (reversed)",
-        dbId: deck.dbId,
-        secretToken: deck.secretToken,
-        keyHeader: deck.valueHeader,
-        valueHeader: deck.keyHeader,
-        isDbTitle: deck.isDbTitle,
-        isReversed: true);
+    /*  
+      Does not reverse from notion, uses existing cards
+      If user wants to reverse from notion, they can 
+        * create a new deck with flipped headers
+        * update the original deck and then reverse again
+   */
+    List<repo.Card> cards = await deck.getCards();
+    for (repo.Card card in cards) {
+      card.flipQuestionAnswer();
+    }
+    Deck reversedDeck = deck.copyWith(
+      name: "${deck.name} (reversed)",
+      dbId: IdGenerator.getRandomString(10),
+      isReversed: true,
+      keyHeader: deck.valueHeader,
+      valueHeader: deck.keyHeader,
+    );
+    await deck.createCards(cards);
+    await user.createDeckRepo(reversedDeck);
     return reversedDeck;
   }
 }

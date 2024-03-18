@@ -15,7 +15,12 @@ import 'package:notion_card/widget_templates/difficulty_selector.dart';
 class CardView extends StatefulWidget {
   final Deck deck;
   final User user;
-  const CardView({super.key, required this.deck, required this.user});
+  final Function callback;
+  const CardView(
+      {super.key,
+      required this.deck,
+      required this.user,
+      required this.callback});
 
   @override
   State<CardView> createState() => _CardViewState();
@@ -44,7 +49,7 @@ class _CardViewState extends State<CardView> {
   List<SelectorButton> selectedOptions = [
     SelectorButton(
       title: '1',
-      color: const Color.fromARGB(255, 98, 6, 6)!,
+      color: const Color.fromARGB(255, 98, 6, 6),
       width: 40, // Width of the button
     ),
     SelectorButton(
@@ -119,6 +124,15 @@ class _CardViewState extends State<CardView> {
     } else {
       return Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () {
+              widget.callback(widget
+                  .deck); 
+              Navigator.of(context)
+                  .pop(); 
+            },
+          ),
           toolbarHeight: _toolbarHeight,
           title: Center(
             child: Text(

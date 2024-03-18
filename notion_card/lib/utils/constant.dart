@@ -3,6 +3,10 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Constants {
+  static const double maxEasinessFactor = 4; // Ballparks for now
+  static const int maxRepetitionNumber = 3;
+  static const int defaultRepetitionNumber = 0;
+  static const double defaultEasinessFactor = 2;
   static const String appName = 'NotionCards';
   static const Color lavendar = Color(0xFF755DC1);
   static const List<Color> cardColorOptions = [

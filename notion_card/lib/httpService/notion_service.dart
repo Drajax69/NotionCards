@@ -32,9 +32,9 @@ class NotionService {
                   cid: IdGenerator.getRandomString(10),
                   question: question,
                   answer: answer,
-                  easinessFactor: 2.5,
+                  easinessFactor: Constants.defaultEasinessFactor,
                   nextReview: Constants.defaultNextReview,
-                  repetitionNumber: 1);
+                  repetitionNumber: Constants.defaultRepetitionNumber);
             } catch (e) {
               log('[ERR! notion-service]: $e');
             }
